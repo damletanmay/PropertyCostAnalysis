@@ -8,6 +8,9 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -29,22 +32,22 @@ import propertyCost.Property.TypeofHouse;
 
 public class ScrapperCrawler {
 
-	public static String userDirectory = System.getProperty("user.dir"); // getting user path
-	public static String osName = System.getProperty("os.name"); // get OS name
+	public static final String userDirectory = System.getProperty("user.dir"); // getting user path
+	public static final String osName = System.getProperty("os.name"); // get OS name
 
 	public static ArrayList<City> canadaCities = new ArrayList<City>(); // cities are loaded into canadaCities object
 	public static ArrayList<Property> allProperties = new ArrayList<Property>();
 
-	public static String[] platforms = { "Realtor", "Zillow", "Zolo" }; // all the platforms
+	public static final String[] platforms = { "Realtor", "Zillow", "Zolo" }; // all the platforms
 
 	public static final String[][] platformsLink = { {
 			"https://www.realtor.ca/map#ZoomLevel=4&Center=64.942702%2C-108.739845&LatitudeMax=73.67762&LongitudeMax=-56.00547&LatitudeMin=51.99920&LongitudeMin=-161.47422&Sort=6-D&GeoName=Vancouver%2C%20BC&PropertyTypeGroupID=1&TransactionTypeId=2&PropertySearchTypeId=0&Currency=CAD",
-			"Realtor", "txtMapSearchInput", "mapSearchIcon" }, }; // links of each platform with details
+			platforms[0], "txtMapSearchInput", "mapSearchIcon" }, }; // links of each platform with details
 
 	public static List<String> fileDeleteFail = new ArrayList<String>();
 	public static int faultyPages = 0;
 
-	public static File savedObject = new File(userDirectory + "/Saved Objects/allProperties.dat");
+	public static final File savedObject = new File(userDirectory + "/Saved Objects/allProperties.dat");
 
 	private static void makeFolders() {
 
@@ -117,7 +120,7 @@ public class ScrapperCrawler {
 
 				String windowsPath = String.format("%s\\Scraped Data\\%s\\%s\\", userDirectory, platform, searchQuery);
 
-				String linuxPath = String.format("%s/Scraped Data/%s/%s", userDirectory, platform, searchQuery);
+				String linuxPath = String.format("%s/Scraped Data/%s/%s/", userDirectory, platform, searchQuery);
 
 				if (platform.equals("Realtor")) {
 					scrapeRealtorData(driver, identifierSearch, identifierButton, searchQuery, windowsPath, linuxPath);
@@ -127,6 +130,8 @@ public class ScrapperCrawler {
 		}
 	}
 
+	// scrapes realtor website data and uses saveHTMLFile() to save to file to
+	// appropriate path
 	private static void scrapeRealtorData(WebDriver driver, String identifierSearch, String identifierButton,
 			String searchQuery, String windowsPath, String linuxPath) {
 
@@ -194,7 +199,7 @@ public class ScrapperCrawler {
 				// make a file path
 				String filePath;
 
-				if (osName.contains("Windows")) {
+				if (osName.toLowerCase().contains("windows")) {
 					filePath = windowsPath + uniqueID + ".html";
 				} else {
 					filePath = linuxPath + uniqueID + ".html";
@@ -219,6 +224,7 @@ public class ScrapperCrawler {
 		}
 	}
 
+	// below function saves HTML file to given path
 	private static void saveHTMLFile(String html, String filePath) {
 		try {
 			System.out.println(filePath); // TODO : COMMENT LATER
@@ -234,6 +240,7 @@ public class ScrapperCrawler {
 		}
 	}
 
+	// a timeout function for the thread to wait while the website is loading / bypassing captcha
 	private static void timeOut(int seconds) {
 		try {
 			TimeUnit.SECONDS.sleep(seconds); // sleep 7 seconds
@@ -242,22 +249,23 @@ public class ScrapperCrawler {
 		}
 	}
 
-	// a function that returns a set of strings which has information about all the
+	// a function that returns a List of strings which has file names of all the
 	// files in a folder
 	public static List<String> listFiles(String dir) {
+		// making a stream, filtering files to see if they are directory or not, mapping
+		// and then collecting to list
 		return Stream.of(new File(dir).listFiles()).filter(file -> !file.isDirectory()).map(File::getName)
 				.collect(Collectors.toList());
 	}
 
+	// this function loads previously scraped data into class property
 	private static void loadScrapedDataIntoClass(ArrayList<City> cities) {
 
-		ArrayList<Property> properties = new ArrayList<Property>();
-
 		// for each platform, for each city, for each file inside a city save data of
-		// all those files
+		// all the files in them
 		for (String platform : platforms) {
 
-			// for each cities
+			// for each cities in a platform folder
 			for (City city : cities) {
 
 				String windowsPath = String.format("%s\\Scraped Data\\%s\\%s\\", userDirectory, platform,
@@ -267,19 +275,21 @@ public class ScrapperCrawler {
 
 				String filePath;
 
-				if (osName.contains("Windows")) {
+				// configure file path based on operating system.
+				if (osName.toLowerCase().contains("windows")) {
 					filePath = windowsPath;
 				} else {
 					filePath = linuxPath;
 				}
-//				System.out.println(city.city);
 
-				// for each file in each city folder
+//				System.out.println(city.city); TODO remove later
+
+				// traversing each file in a city folder
 				for (String uniqueFileIdentifier : listFiles(filePath)) {
 					String propertyListingHTMLfilePath = filePath + uniqueFileIdentifier;
 
 					if (platform.equals(platforms[0])) {
-						// save data into arraylist of properties
+						// save data into array list of properties
 						saveRealtorScrappedData(propertyListingHTMLfilePath, city, uniqueFileIdentifier);
 					}
 				}
@@ -288,14 +298,17 @@ public class ScrapperCrawler {
 
 	}
 
-	// this function parses data saved in html files and saves objects
+	// this function parses data saved in html files in realtor folder and makes
+	// objects of property
 	private static void saveRealtorScrappedData(String filePath, City city, String uniqueID) {
 		// filename passed becomes unique id for a property
 		try {
-			File htmlFile = new File(filePath);
 
-			Document doc = Jsoup.parse(htmlFile, "UTF-8");
+			File htmlFile = new File(filePath); // file
 
+			Document doc = Jsoup.parse(htmlFile, "UTF-8"); // file parsing
+
+			// getting required elements for getting text inside them
 			Element price = doc.getElementById("listingPriceValue");
 			Element address = doc.getElementById("listingAddress");
 
@@ -303,11 +316,11 @@ public class ScrapperCrawler {
 
 			Element bathRooms = doc.getElementById("BathroomIcon"); // bathrooms
 
-			Element description = doc.getElementById("propertyDescriptionCon"); // bathrooms
+			Element description = doc.getElementById("propertyDescriptionCon"); // description
 
 			Elements typeOfHouse = doc.getElementsByClass("propertyDetailsSectionContentValue");
 
-			// check all the elements
+			// check all the elements if they are found
 			if (bedRooms != null && typeOfHouse != null && bathRooms != null && price != null && address != null) {
 
 				Property property = new Property();
@@ -317,9 +330,9 @@ public class ScrapperCrawler {
 				property.city = city.city;
 				property.province = city.province;
 				property.provinceId = city.provinceId;
-				property.zipcode = property.address.substring(property.address.length() - 6); // saving last 6
-																								// characters
-																								// as zipcode
+				// saving last 6 characters as zipcode
+				property.zipcode = property.address.substring(property.address.length() - 6);
+				property.description = description.text();
 				property.platform = platforms[0];
 				property.uniqueID = uniqueID;
 
@@ -327,7 +340,7 @@ public class ScrapperCrawler {
 
 				int above = 0;
 				int below = 0;
-
+				// solving bedrooms
 				if (bedrooms.contains("+")) {
 					above = Integer.parseInt(bedrooms.substring(0, 1));
 					below = Integer.parseInt(bedrooms.substring(2, 3));
@@ -336,7 +349,7 @@ public class ScrapperCrawler {
 					above = Integer.parseInt(bedrooms.substring(0, 1));
 				}
 
-				property.bathrooms = Integer.parseInt(bathRooms.text().replaceAll("[^0-9]", "")); // remove everything
+				property.bathrooms = Integer.parseInt(bathRooms.text().replaceAll("[^0-9]", "")); // remove everything,
 																									// except numbers
 				property.bedrooms = above + below;
 
@@ -349,9 +362,8 @@ public class ScrapperCrawler {
 				}
 
 //				System.out.println(filePath.substring(103));
-//				property.printProperty();
 				allProperties.add(property); // add to all properties
-				property = null; // freeing memory
+				property = null; // freeing memory even though java has a garbage collector
 			} else {
 
 				faultyPages += 1;
@@ -373,7 +385,7 @@ public class ScrapperCrawler {
 		}
 	}
 
-	// read saved objects
+	// read saved dat files which should have allProperties array list saved as a dat file at savedObject path
 	private static ArrayList<Property> readDatFile() {
 		try {
 			FileInputStream inputStreamDat = new FileInputStream(savedObject);
@@ -390,9 +402,9 @@ public class ScrapperCrawler {
 		}
 	}
 
-	// save all objects 
+	// save allProperties array list to savedObject path 
 	private static void saveDatFile() {
-		
+
 		try {
 			FileOutputStream outputStream = new FileOutputStream(savedObject);
 			ObjectOutputStream fileWriterDat = new ObjectOutputStream(outputStream);
@@ -410,26 +422,25 @@ public class ScrapperCrawler {
 
 		// making all the required folders for different purposes
 		makeFolders();
-		// open saved object files
-		
+
+		// open saved object files if exist
 		File savedObjects = new File(userDirectory + "/Saved Objects/allProperties.dat");
 		
 		if (!savedObjects.exists()) {
 			// if allProperties.dat is not found, start scraping
-			canadaCities = City.loadCityData(); // load city data 
-			
+			canadaCities = City.loadCityData(); // load city data
+
 			// save data into files
-			try {			
+			try {
 				webCrawler(canadaCities);
 				// webCrawler(canadaCities.subList(6, 7));
-			}
-			catch (Exception e) {
+			} catch (Exception e) {
 				System.out.println("Connection Reset Error");
 			}
-			
+
 			// load scraped data into allProperties array list
 			loadScrapedDataIntoClass(canadaCities);
-			
+
 			// print stuff
 			System.out.println(allProperties.size());
 			System.out.println(faultyPages);
@@ -437,11 +448,11 @@ public class ScrapperCrawler {
 
 			// save allProperties array list to dat file
 			saveDatFile();
+		} else {
+			// if dat file available just load the dat file
+			allProperties = readDatFile();
+			System.out.println("File Loaded Successfully");
 		}
-		else {
-		allProperties = readDatFile();
-		System.out.println("here");
-		}
-		
+
 	}
 }

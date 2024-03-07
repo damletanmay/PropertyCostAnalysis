@@ -6,7 +6,7 @@ public class Property implements Serializable {
 	
 	float price; 
 	int bedrooms, bathrooms;
-	String address, city, province, provinceId, zipcode, platform, uniqueID;
+	String address, city, province, provinceId, zipcode, platform, uniqueID, description;
 	TypeofHouse houseType;
 	enum TypeofHouse {
 		Apartment, House

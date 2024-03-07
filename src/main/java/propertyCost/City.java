@@ -21,7 +21,7 @@ public class City {
 		String linuxPath = "/Cities Data/cities.csv";
 		String filePath;
 		
-		if (osName.contains("Windows")) {
+		if (osName.toLowerCase().contains("windows")) {
 			filePath = userDirectory + windowsPath;
 		}
 		else {			
