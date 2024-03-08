@@ -8,12 +8,10 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Writer;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -24,6 +22,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.edge.EdgeDriver;
@@ -38,11 +37,13 @@ public class ScrapperCrawler {
 	public static ArrayList<City> canadaCities = new ArrayList<City>(); // cities are loaded into canadaCities object
 	public static ArrayList<Property> allProperties = new ArrayList<Property>();
 
-	public static final String[] platforms = { "Realtor", "Zillow", "Zolo" }; // all the platforms
+	public static final String[] platforms = { "Realtor", "Zolo", "Zillow" }; // all the platforms
 
 	public static final String[][] platformsLink = { {
 			"https://www.realtor.ca/map#ZoomLevel=4&Center=64.942702%2C-108.739845&LatitudeMax=73.67762&LongitudeMax=-56.00547&LatitudeMin=51.99920&LongitudeMin=-161.47422&Sort=6-D&GeoName=Vancouver%2C%20BC&PropertyTypeGroupID=1&TransactionTypeId=2&PropertySearchTypeId=0&Currency=CAD",
-			platforms[0], "txtMapSearchInput", "mapSearchIcon" }, }; // links of each platform with details
+			platforms[0], "txtMapSearchInput", "mapSearchIcon" },
+			{ "https://www.zolo.ca/", platforms[1], ".text-input", ".submit-search.button" } }; // links of each
+																								// platform with details
 
 	public static List<String> fileDeleteFail = new ArrayList<String>();
 	public static int faultyPages = 0;
@@ -88,7 +89,6 @@ public class ScrapperCrawler {
 							.mkdirs();
 				}
 			}
-
 		}
 	}
 
@@ -97,7 +97,7 @@ public class ScrapperCrawler {
 
 		// new edge driver
 		WebDriver driver = new EdgeDriver();
-
+		driver.manage().window().maximize();
 		// looping over all platforms link
 		for (int j = 0; j < platformsLink.length; j++) {
 
@@ -106,15 +106,14 @@ public class ScrapperCrawler {
 			String platform = platformsLink[j][1];
 			String identifierSearch = platformsLink[j][2];
 			String identifierButton = platformsLink[j][3];
+
 			driver.get(link);
 
-			timeOut(16); // so that I can by pass bot verification
-
+			timeOut(16); // so that I can by pass bot verification TODO: CHANGE TO 16 SECONDS
 			// get data for all the cities for a platform
 			for (City city : list) {
 
 				String searchQuery = city.city + ", " + city.provinceId;
-				driver.manage().window().maximize();
 
 				WebElement searchElement, button;
 
@@ -122,11 +121,124 @@ public class ScrapperCrawler {
 
 				String linuxPath = String.format("%s/Scraped Data/%s/%s/", userDirectory, platform, searchQuery);
 
-				if (platform.equals("Realtor")) {
+				timeOut(2);
+
+				// to scrape all the listings in a city below methods are called
+				if (platform.equals(platforms[0])) {
 					scrapeRealtorData(driver, identifierSearch, identifierButton, searchQuery, windowsPath, linuxPath);
+				} else if (platform.equals(platforms[1])) {
+					scrapeZoloData(driver, identifierSearch, identifierButton, searchQuery, windowsPath, linuxPath);
 				}
 			}
-			driver.close();
+		}
+
+		driver.close();
+	}
+
+	private static void scrapeZoloData(WebDriver driver, String identifierSearch, String identifierButton,
+			String searchQuery, String windowsPath, String linuxPath) {
+
+		try {
+
+			WebElement searchElement = driver.findElement(By.cssSelector(identifierSearch));
+			WebElement button = driver.findElement(By.cssSelector(identifierButton));
+
+			// enter our search query and click search
+			searchElement.clear();
+			searchElement.click();
+			searchElement.sendKeys(searchQuery);
+
+			button.click();
+
+			timeOut(4); // wait 4 seconds
+
+		} catch (Exception e) {
+			System.out.println("Main Page not found");
+			e.printStackTrace();
+			return;
+		}
+
+		// check if properties are found
+		try {
+			WebElement strongError = driver.findElement(By.tagName("Strong"));
+			if (strongError.getText().toLowerCase().contains("oops")) {
+				return; // no properties are found
+			}
+		} catch (Exception e) {
+			System.out.println("No Strong Tag Found that means properties are found for a city");
+		}
+
+		// getting all listings' id
+		WebElement gallery = driver.findElement(By.cssSelector("#gallery div"));
+
+		// getting articles
+		List<WebElement> articles = gallery.findElements(By.cssSelector("article div div a"));
+
+		for (WebElement article : articles) {
+
+			// get main window's window handle
+			String base = driver.getWindowHandle();
+			Set<String> set;
+			try {
+				String clicklnk = Keys.chord(Keys.CONTROL, Keys.ENTER);
+				// open the link in new tab,by pressing ctrl + enter
+				article.sendKeys(clicklnk); // click a listing by ctrl + enter so that we can open into new tab
+
+				// make a set of all window handles
+				set = driver.getWindowHandles();
+
+				if (set.size() != 2) {
+					continue;
+				}
+
+				// remove the main window handle from a base i.e. just keep second tab in the
+				// set
+				set.remove(base);
+				assert set.size() == 1; // make set size 1
+
+				// switch to second tab
+				for (String otherWindow : set) {
+					driver.switchTo().window(otherWindow);
+				}
+
+				timeOut(6);
+
+				// get html source code of a particular listing
+				String html = driver.getPageSource();
+
+				// get a unique id to save by file name
+
+				String uniqueID;
+				try {
+					uniqueID = driver.findElement(By.cssSelector(".key-fact-mls .priv")).getText();
+					// make a file path
+					String filePath;
+
+					if (osName.toLowerCase().contains("windows")) {
+						filePath = windowsPath + uniqueID + ".html";
+					} else {
+						filePath = linuxPath + uniqueID + ".html";
+					}
+
+					// save a file
+					saveHTMLFile(html, filePath);
+				} catch (Exception e) {
+					System.out.println("Listing Not Found and not saved");
+				}
+
+				try {
+					driver.close(); // Close a tab
+					driver.switchTo().window(base); // switch to main base tab
+					JavascriptExecutor js = (JavascriptExecutor) driver;
+					js.executeScript("gallery.scrollBy(0,34)"); // scroll by 34 pixels
+				} catch (Exception e) {
+					System.out.println("Unable to close tab");
+					return;
+				}
+
+			} catch (Exception e) {
+				System.out.println("Listing not clickable");
+			}
 		}
 	}
 
@@ -149,8 +261,15 @@ public class ScrapperCrawler {
 			// click button
 			button = driver.findElement(By.id(identifierButton));
 			button.click();
+
+			timeOut(4);
+
+			driver.findElement(By.id("polygonOptInBtn")).click(); // search within boundary toggle
+			timeOut(2);
+
 		} catch (Exception e) {
 			System.out.println("Main Page not found");
+			e.printStackTrace();
 			return;
 		}
 
@@ -159,69 +278,87 @@ public class ScrapperCrawler {
 		js.executeScript(
 				"document.getElementById('AutoCompleteCon-txtMapSearchInput').setAttribute('class', 'hidden')");
 
-		timeOut(4);
+		timeOut(2);
 
 		// get all listings in a particular city
 		List<WebElement> listings = driver.findElements(By.className("cardCon"));
 
+		// get main window's window handle
+
 		for (WebElement listing : listings) {
 
-			timeOut(2);
-			try {
-				listing.click(); // click a listing
-			} catch (Exception e) {
-				System.out.println("Listing not clickable");
-			}
-
-			// get main window's window handle
 			String base = driver.getWindowHandle();
-
-			// make a set of all window handles
-			Set<String> set = driver.getWindowHandles();
-
-			// remove the main window handle from a base
-			set.remove(base);
-			assert set.size() == 1; // make set size 1
-
-			for (String otherWindow : set) {
-				driver.switchTo().window(otherWindow);
-			}
-
-			timeOut(6);
-
-			// get html source code of a particular listing
-			String html = driver.getPageSource();
-
-			// get a unique id to save by file name
-			String uniqueID;
 			try {
-				uniqueID = driver.findElement(By.id("MLNumberVal")).getText();
-				// make a file path
-				String filePath;
+				timeOut(2); // TODO:2
+				listing.click(); // click a listing
 
-				if (osName.toLowerCase().contains("windows")) {
-					filePath = windowsPath + uniqueID + ".html";
-				} else {
-					filePath = linuxPath + uniqueID + ".html";
+				// make a set of all window handles
+				Set<String> set = driver.getWindowHandles();
+
+				if (set.size() != 2) {
+					continue;
 				}
 
-				// save a file
-				saveHTMLFile(html, filePath);
+				// remove the main window handle from a base i.e. just keep the second tab in
+				// the set
+				set.remove(base);
+				assert set.size() == 1; // make set size 1
+
+				// switch to second tab
+				for (String otherWindow : set) {
+					driver.switchTo().window(otherWindow);
+				}
+
+				timeOut(10); // TODO: 10
+
+				// get html source code of a particular listing
+				String html = driver.getPageSource();
+
+				// get a unique id to save by file name
+				String uniqueID;
+				try {
+					uniqueID = driver.findElement(By.id("MLNumberVal")).getText();
+					// make a file path
+					String filePath;
+
+					if (osName.toLowerCase().contains("windows")) {
+						filePath = windowsPath + uniqueID + ".html";
+					} else {
+						filePath = linuxPath + uniqueID + ".html";
+					}
+
+					// save a file
+					saveHTMLFile(html, filePath);
+
+					try {
+						driver.close(); // Close a tab
+						driver.switchTo().window(base); // switch to main base tab
+						js.executeScript("mapSidebarBodyCon.scrollBy(0,100)"); // scroll by 100 pixels
+
+					} catch (Exception e) {
+						System.out.println("Unable to close new tab");
+					}
+
+				} catch (Exception e) {
+					System.out.println("Listing Not Found and not saved");
+					driver.close();
+					driver.switchTo().window(base); // switch to main base tab
+					js.executeScript("mapSidebarBodyCon.scrollBy(0,100)"); // scroll by 100 pixels
+				}
 
 			} catch (Exception e) {
-				System.out.println("Listing Not Found");
-				continue;
+				// probably means we're blocked again and have 10 seconds to solve captcha
+				System.out.println("Listing not clickable");
+				driver.switchTo().window(base);
 			}
-			try {
-				driver.close(); // Close a tab
-				driver.switchTo().window(base); // switch to main base tab
-				js.executeScript("mapSidebarBodyCon.scrollBy(0,100)"); // scroll by 100 pixels
-			} catch (Exception e) {
-				System.out.println("Listing Not Found");
-				continue;
-			}
-
 		}
+
+		try {
+			driver.findElement(By.id("PolygonClearingBtn")).click(); // search within boundary toggle
+		} catch (Exception e) {
+			return; // if button becomes hidden due to some reason then np, just move ahead
+		}
+
 	}
 
 	// below function saves HTML file to given path
@@ -237,10 +374,12 @@ public class ScrapperCrawler {
 
 		} catch (IOException e) {
 			System.out.println("An error occurred.");
+			e.printStackTrace();
 		}
 	}
 
-	// a timeout function for the thread to wait while the website is loading / bypassing captcha
+	// a timeout function for the thread to wait while the website is loading /
+	// bypassing captcha
 	private static void timeOut(int seconds) {
 		try {
 			TimeUnit.SECONDS.sleep(seconds); // sleep 7 seconds
@@ -258,7 +397,8 @@ public class ScrapperCrawler {
 				.collect(Collectors.toList());
 	}
 
-	// this function loads previously scraped data into class property
+	// this function loads previously scraped data into class property i.e. make
+	// objects
 	private static void loadScrapedDataIntoClass(ArrayList<City> cities) {
 
 		// for each platform, for each city, for each file inside a city save data of
@@ -285,15 +425,122 @@ public class ScrapperCrawler {
 //				System.out.println(city.city); TODO remove later
 
 				// traversing each file in a city folder
-				for (String uniqueFileIdentifier : listFiles(filePath)) {
-					String propertyListingHTMLfilePath = filePath + uniqueFileIdentifier;
 
-					if (platform.equals(platforms[0])) {
-						// save data into array list of properties
-						saveRealtorScrappedData(propertyListingHTMLfilePath, city, uniqueFileIdentifier);
+				List<String> allFiles = listFiles(filePath);
+
+				if (allFiles.size() != 0) {
+
+					for (String uniqueFileIdentifier : listFiles(filePath)) {
+						String propertyListingHTMLfilePath = filePath + uniqueFileIdentifier;
+
+						if (platform.equals(platforms[0])) {
+							// save data into array list of properties
+							saveRealtorScrappedData(propertyListingHTMLfilePath, city, uniqueFileIdentifier);
+						} else if (platform.equals(platforms[1])) {
+							// save data into array list of properties
+							saveZoloScrappedData(propertyListingHTMLfilePath, city, uniqueFileIdentifier);
+						}
 					}
 				}
+
 			}
+		}
+
+	}
+
+	// this function parses data saved in html files in zolo folder and makes
+	// objects of property
+	private static void saveZoloScrappedData(String filePath, City city, String uniqueID) {
+
+		try {
+			File htmlFile = new File(filePath); // file
+
+			Document doc = Jsoup.parse(htmlFile, "UTF-8"); // file parsing
+
+			Elements price = doc.getElementsByClass("listing-price");
+			
+			Elements bedBath = doc.getElementsByClass("priv heavy");
+			
+			Elements description = doc.select("div.section-listing-content > div > span.priv ");
+			
+			Elements address = doc.getElementsByClass("listing-location");
+			
+			Elements typeOfHouse = doc.select("section.section-listing-content > div");
+			
+			
+			if (price!= null && bedBath !=null && description!=null && address!=null && typeOfHouse!=null ) {
+				
+				Property property = new Property();
+
+				StringTokenizer st = new StringTokenizer(price.text());
+				
+				while (st.hasMoreTokens()) {
+					property.price = Float.parseFloat(st.nextToken().replaceAll("[^0-9.]", ""));
+					// break after first element because first has price
+					break;
+				}
+								
+				property.address = address.text();
+				property.city = city.city;
+				property.province = city.province;
+				property.provinceId = city.provinceId;
+				property.zipcode = null; // zip code not available for any listings
+				property.description = description.text();
+				property.platform = platforms[1];
+				property.uniqueID = uniqueID.substring(0,uniqueID.length()-5);
+				
+				// solving house type
+				if (typeOfHouse.text().toLowerCase().contains("apartment")) {
+					property.houseType = TypeofHouse.Apartment;
+				}
+				else {
+					property.houseType = TypeofHouse.House;
+				}
+			
+				st = new StringTokenizer(bedBath.text());
+				
+				int i =1; // first element is bedrooms
+				String bedRooms = null;
+				int bathRooms = 0;
+				
+				// separting bathrooms and bedrooms 
+				while(st.hasMoreTokens()) {
+					if (i==1) {
+						bedRooms = st.nextToken();
+						i++;
+					}
+					else if(i == 2) {
+						bathRooms = Integer.parseInt(st.nextToken().replaceAll("[^0-9]","").strip());
+						break;
+					}
+				}
+				
+				int above = 0;
+				int below = 0;
+				
+				// solving bedrooms
+				if (bedRooms.contains("+")) {
+					above = Integer.parseInt(bedRooms.substring(0, 1));
+					below = Integer.parseInt(bedRooms.substring(2, 3));
+
+				} else {
+					above = Integer.parseInt(bedRooms.substring(0, 1));
+				}
+				
+				property.bedrooms = above + below;
+				property.bathrooms = bathRooms;
+				
+				allProperties.add(property);
+				property = null;
+			}
+			else {
+				// delete files which are plots or doesn't have full info
+				deleteUselessFiles(uniqueID, htmlFile);
+			}
+			
+		} catch (Exception e) {
+			System.out.println("Error in loading data from file");
+			deleteUselessFiles(uniqueID, new File(filePath));
 		}
 
 	}
@@ -334,7 +581,7 @@ public class ScrapperCrawler {
 				property.zipcode = property.address.substring(property.address.length() - 6);
 				property.description = description.text();
 				property.platform = platforms[0];
-				property.uniqueID = uniqueID;
+				property.uniqueID = uniqueID.substring(0, uniqueID.length() - 5);
 
 				String bedrooms = bedRooms.text().replaceAll("[^0-9+]", "").strip(); // replace all except + and numbers
 
@@ -365,27 +612,32 @@ public class ScrapperCrawler {
 				allProperties.add(property); // add to all properties
 				property = null; // freeing memory even though java has a garbage collector
 			} else {
-
-				faultyPages += 1;
-
-				// if above grade is null that means that this listing is not a
-				// apartment or a house or not all information is there in the files
-				// so delete such files
-
-				if (htmlFile.delete()) {
-					System.out.println("File deleted successfully");
-				} else {
-					System.out.println("Error in deleting file " + uniqueID);
-					fileDeleteFail.add(uniqueID);
-
-				}
+				deleteUselessFiles(uniqueID, htmlFile);
 			}
-		} catch (IOException e) {
+		} catch (Exception e) {
 			System.out.println("File Not Found");
+		}
+
+	}
+
+	private static void deleteUselessFiles(String uniqueID, File htmlFile) {
+		faultyPages += 1;
+
+		// if above grade is null that means that this listing is not a
+		// apartment or a house or not all information is there in the files
+		// so delete such files
+
+		if (htmlFile.delete()) {
+			System.out.println("File deleted successfully");
+		} else {
+			System.out.println("Error in deleting file " + uniqueID);
+			fileDeleteFail.add(uniqueID);
+
 		}
 	}
 
-	// read saved dat files which should have allProperties array list saved as a dat file at savedObject path
+	// read saved dat files which should have allProperties array list saved as a
+	// dat file at savedObject path
 	private static ArrayList<Property> readDatFile() {
 		try {
 			FileInputStream inputStreamDat = new FileInputStream(savedObject);
@@ -402,7 +654,7 @@ public class ScrapperCrawler {
 		}
 	}
 
-	// save allProperties array list to savedObject path 
+	// save allProperties array list to savedObject path
 	private static void saveDatFile() {
 
 		try {
@@ -420,22 +672,23 @@ public class ScrapperCrawler {
 
 	public static void main(String[] args) {
 
+		canadaCities = City.loadCityData(); // load city data
+
 		// making all the required folders for different purposes
 		makeFolders();
 
 		// open saved object files if exist
 		File savedObjects = new File(userDirectory + "/Saved Objects/allProperties.dat");
-		
+
 		if (!savedObjects.exists()) {
 			// if allProperties.dat is not found, start scraping
-			canadaCities = City.loadCityData(); // load city data
 
-			// save data into files
 			try {
 				webCrawler(canadaCities);
-				// webCrawler(canadaCities.subList(6, 7));
+//				webCrawler(canadaCities.subList(1, 3));
 			} catch (Exception e) {
 				System.out.println("Connection Reset Error");
+				e.printStackTrace();
 			}
 
 			// load scraped data into allProperties array list
@@ -452,6 +705,10 @@ public class ScrapperCrawler {
 			// if dat file available just load the dat file
 			allProperties = readDatFile();
 			System.out.println("File Loaded Successfully");
+			
+			System.out.println("All Objects: "+ allProperties.size());
+
+			
 		}
 
 	}
