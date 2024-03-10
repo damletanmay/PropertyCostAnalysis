@@ -26,6 +26,7 @@ import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.edge.EdgeDriver;
+import org.openqa.selenium.interactions.Actions;
 
 import propertyCost.Property.TypeofHouse;
 
@@ -37,13 +38,16 @@ public class ScrapperCrawler {
 	public static ArrayList<City> canadaCities = new ArrayList<City>(); // cities are loaded into canadaCities object
 	public static ArrayList<Property> allProperties = new ArrayList<Property>();
 
-	public static final String[] platforms = { "Realtor", "Zolo", "Zillow" }; // all the platforms
+	public static final String[] platforms = { "Realtor", "Zolo", "RoyalLePage" }; // all the platforms
 
 	public static final String[][] platformsLink = { {
 			"https://www.realtor.ca/map#ZoomLevel=4&Center=64.942702%2C-108.739845&LatitudeMax=73.67762&LongitudeMax=-56.00547&LatitudeMin=51.99920&LongitudeMin=-161.47422&Sort=6-D&GeoName=Vancouver%2C%20BC&PropertyTypeGroupID=1&TransactionTypeId=2&PropertySearchTypeId=0&Currency=CAD",
 			platforms[0], "txtMapSearchInput", "mapSearchIcon" },
-			{ "https://www.zolo.ca/", platforms[1], ".text-input", ".submit-search.button" } }; // links of each
-																								// platform with details
+			{ "https://www.zolo.ca/", platforms[1], ".text-input", ".submit-search.button" },
+			{ "https://www.royallepage.ca/en/searchgeo/homes/on/windsor?property_type=&house_type=&features=&listing_type=&lat=42.317438&lng=-83.035225&bypass=&address=Windsor&address_type=city&city_name=Windsor&prov_code=ON&display_type=gallery-view&da_id=&travel_time=&school_id=&boundary=true&search_str=Windsor%2C+ON%2C+CAN&id_search_str=Windsor%2C+ON%2C+CAN&school_search_str=&travel_time_min=30&travel_time_mode=drive&travel_time_congestion=&min_price=0&max_price=5000000%2B&min_leaseprice=0&max_leaseprice=5000%2B&beds=0&baths=0&transactionType=SALE&keyword=",
+					platforms[2], "id_search_str", "div.button.button--square" } }; // links of each
+
+	// platform with details
 
 	public static List<String> fileDeleteFail = new ArrayList<String>();
 	public static int faultyPages = 0;
@@ -109,7 +113,7 @@ public class ScrapperCrawler {
 
 			driver.get(link);
 
-			timeOut(16); // so that I can by pass bot verification TODO: CHANGE TO 16 SECONDS
+			timeOut(16); // so that I can by pass bot verification always keep it at 16 seconds
 			// get data for all the cities for a platform
 			for (City city : list) {
 
@@ -128,6 +132,8 @@ public class ScrapperCrawler {
 					scrapeRealtorData(driver, identifierSearch, identifierButton, searchQuery, windowsPath, linuxPath);
 				} else if (platform.equals(platforms[1])) {
 					scrapeZoloData(driver, identifierSearch, identifierButton, searchQuery, windowsPath, linuxPath);
+				} else if (platform.equals(platforms[2])) {
+					scrapeRoyalLePageData(driver, identifierSearch, identifierButton, searchQuery, windowsPath, linuxPath);
 				}
 			}
 		}
@@ -135,11 +141,128 @@ public class ScrapperCrawler {
 		driver.close();
 	}
 
-	private static void scrapeZoloData(WebDriver driver, String identifierSearch, String identifierButton,
+	private static void scrapeRoyalLePageData(WebDriver driver, String identifierSearch, String identifierButton,
 			String searchQuery, String windowsPath, String linuxPath) {
 
 		try {
+			WebElement searchElement = driver.findElement(By.id(identifierSearch));
 
+			// enter our search query and click search
+			searchElement.clear();
+//			searchElement.sendKeys(Keys.chord(Keys.LEFT_CONTROL, Keys.BACK_SPACE, Keys.BACK_SPACE));
+			searchElement.click();
+			timeOut(1);
+			searchElement.sendKeys(searchQuery+", CAN");
+			
+			timeOut(1);
+			searchElement.click();
+			searchElement.sendKeys(Keys.chord(Keys.ENTER));
+
+			timeOut(10); // wait 10 seconds
+		} catch (Exception e) {
+			System.out.println("Main Page not found");
+			e.printStackTrace();
+			return;
+		}
+		
+		
+		JavascriptExecutor js = (JavascriptExecutor) driver;
+		js.executeScript("scrollBy(0,450)"); // scroll by 450 pixels
+
+		
+		WebElement gallery = driver.findElement(By.id("gallery-view2"));
+		WebElement ul = gallery.findElements(By.tagName("ul")).get(0);
+		
+		List<WebElement> listings = ul.findElements(By.tagName("li"));
+		
+		
+		for (WebElement listing : listings) {
+			// get main window's window handle
+			String base = driver.getWindowHandle();
+			Set<String> set;
+
+			try {
+				// remove ads
+				if (listing.getAttribute("class").equalsIgnoreCase("advertisment")) {
+					continue; 
+				}
+				
+				String clicklnk = Keys.chord(Keys.CONTROL, Keys.ENTER);
+				// open the link in new tab,by pressing ctrl + enter
+				listing.findElement(By.tagName("a")).sendKeys(clicklnk); // click a listing by ctrl + enter so that we can open into new tab
+				
+				// make a set of all window handles
+				set = driver.getWindowHandles();
+
+				if (set.size() != 2) {
+					continue;
+				}
+
+				// remove the main window handle from a base i.e. just keep second tab in the
+				// set
+				set.remove(base);
+				assert set.size() == 1; // make set size 1
+
+				// switch to second tab
+				for (String otherWindow : set) {
+					driver.switchTo().window(otherWindow);
+				}
+
+				timeOut(6);
+
+				// get html source code of a particular listing
+				String html = driver.getPageSource();
+
+				// get a unique id to save by file name
+
+				String uniqueID;
+				
+				
+				try {
+					uniqueID = driver.findElement(By.cssSelector("span.article.body-15")).getText()
+							.replaceAll("[^0-9A-Za-z]", "");
+					
+					String[] strArray = uniqueID.split(" ");  
+					
+					uniqueID = strArray[strArray.length-1].substring(3); 
+					
+					// make a file path					
+					String filePath;
+
+					if (osName.toLowerCase().contains("windows")) {
+						filePath = windowsPath + uniqueID + ".html";
+					} else {
+						filePath = linuxPath + uniqueID + ".html";
+					}
+					// save a file
+					saveHTMLFile(html, filePath);
+				} catch (Exception e) {
+					System.out.println("Listing Not Found and not saved");
+				}
+				
+				try {
+					driver.close(); // Close a tab
+					driver.switchTo().window(base); // switch to main base tab
+					js.executeScript("scrollBy(0,65)"); // scroll by 65 pixels
+
+				} catch (Exception e) {
+					System.out.println("Unable to close new tab");
+				}
+
+				
+				
+			} catch (Exception e) {
+				System.out.println("Listing Not Clickable");
+			}
+		}
+
+	}
+
+	private static void scrapeZoloData(WebDriver driver, String identifierSearch, String identifierButton,
+			String searchQuery, String windowsPath, String linuxPath) {
+
+		// code to search and click for a city
+		try {
 			WebElement searchElement = driver.findElement(By.cssSelector(identifierSearch));
 			WebElement button = driver.findElement(By.cssSelector(identifierButton));
 
@@ -158,14 +281,14 @@ public class ScrapperCrawler {
 			return;
 		}
 
-		// check if properties are found
+		// check if listings are found
 		try {
 			WebElement strongError = driver.findElement(By.tagName("Strong"));
 			if (strongError.getText().toLowerCase().contains("oops")) {
 				return; // no properties are found
 			}
 		} catch (Exception e) {
-			System.out.println("No Strong Tag Found that means properties are found for a city");
+			System.out.println("No Strong Tag Found that means listings are found for a city");
 		}
 
 		// getting all listings' id
@@ -246,7 +369,7 @@ public class ScrapperCrawler {
 	// appropriate path
 	private static void scrapeRealtorData(WebDriver driver, String identifierSearch, String identifierButton,
 			String searchQuery, String windowsPath, String linuxPath) {
-
+		// code to search and click for a city
 		try {
 			// get search element and button
 			WebElement searchElement, button;
@@ -289,7 +412,7 @@ public class ScrapperCrawler {
 
 			String base = driver.getWindowHandle();
 			try {
-				timeOut(2); // TODO:2
+				timeOut(2); 
 				listing.click(); // click a listing
 
 				// make a set of all window handles
@@ -309,7 +432,7 @@ public class ScrapperCrawler {
 					driver.switchTo().window(otherWindow);
 				}
 
-				timeOut(10); // TODO: 10
+				timeOut(10);
 
 				// get html source code of a particular listing
 				String html = driver.getPageSource();
@@ -422,8 +545,6 @@ public class ScrapperCrawler {
 					filePath = linuxPath;
 				}
 
-//				System.out.println(city.city); TODO remove later
-
 				// traversing each file in a city folder
 
 				List<String> allFiles = listFiles(filePath);
@@ -439,6 +560,8 @@ public class ScrapperCrawler {
 						} else if (platform.equals(platforms[1])) {
 							// save data into array list of properties
 							saveZoloScrappedData(propertyListingHTMLfilePath, city, uniqueFileIdentifier);
+						} else if (platform.equals(platforms[2])) {
+							saveRoyalLePageScrappedData(propertyListingHTMLfilePath, city, uniqueFileIdentifier);
 						}
 					}
 				}
@@ -448,6 +571,80 @@ public class ScrapperCrawler {
 
 	}
 
+	// this function parses data saved in html files in RoyalLePage folder and makes
+	// objects of property
+	private static void saveRoyalLePageScrappedData(String filePath, City city, String uniqueID) {
+
+		try {
+			File htmlFile = new File(filePath); // file
+
+			Document doc = Jsoup.parse(htmlFile, "UTF-8"); // file parsing
+
+			Element price = doc.select("span.title.title--h1.price").first();
+
+			Element bedRooms = doc.select("div.bed-bath-box__item.beds").first();
+			
+			Element bathRooms = doc.select("div.bed-bath-box__item.baths").first();
+ 
+			Elements description = doc.select("p.body-15.body-15--light ");
+
+			Elements address = doc.select("div.address-bar > h1.title--h2.u-no-margins");
+
+			Elements typeOfHouse = doc.select("ul.property-features-list");
+
+			
+			if (price != null && bedRooms != null && bathRooms != null && description != null && address != null && typeOfHouse != null) {
+
+				Property property = new Property();
+
+				property.price = Float.parseFloat(price.text().replaceAll("[^0-9.]", ""));
+				property.address = address.text();
+				property.city = city.city;
+				property.province = city.province;
+				property.provinceId = city.provinceId;
+				property.zipcode = property.address.substring(property.address.length() - 7).replaceAll("\\s",""); // removing space from last 7 characters
+				property.description = description.text();
+				property.platform = platforms[1];
+				property.uniqueID = uniqueID.substring(0, uniqueID.length() - 5);
+
+				// solving house type
+				if (typeOfHouse.text().toLowerCase().contains("apartment")) {
+					property.houseType = TypeofHouse.Apartment;
+				} else {
+					property.houseType = TypeofHouse.House;
+				}
+
+				int above = 0;
+				int below = 0;
+				String bedrooms = bedRooms.text();
+				// solving bedrooms
+				if (bedrooms.contains("+")) {
+					above = Integer.parseInt(bedrooms.substring(0, 1));
+					below = Integer.parseInt(bedrooms.substring(2, 3));
+
+				} else {
+					above = Integer.parseInt(bedrooms.substring(0, 1));
+				}
+
+				property.bathrooms = Integer.parseInt(bathRooms.text().replaceAll("[^0-9]", "")); // remove everything,
+																									// except numbers
+				property.bedrooms = above + below;
+
+				allProperties.add(property);
+				property = null;
+			} else {
+				// delete files which are plots or doesn't have full info
+				deleteUselessFiles(uniqueID, htmlFile);
+			}
+
+		} catch (Exception e) {
+			System.out.println("Error in loading data from file");
+			deleteUselessFiles(uniqueID, new File(filePath));
+		}
+
+	}
+
+	
 	// this function parses data saved in html files in zolo folder and makes
 	// objects of property
 	private static void saveZoloScrappedData(String filePath, City city, String uniqueID) {
@@ -458,28 +655,27 @@ public class ScrapperCrawler {
 			Document doc = Jsoup.parse(htmlFile, "UTF-8"); // file parsing
 
 			Elements price = doc.getElementsByClass("listing-price");
-			
+
 			Elements bedBath = doc.getElementsByClass("priv heavy");
-			
+
 			Elements description = doc.select("div.section-listing-content > div > span.priv ");
-			
+
 			Elements address = doc.getElementsByClass("listing-location");
-			
+
 			Elements typeOfHouse = doc.select("section.section-listing-content > div");
-			
-			
-			if (price!= null && bedBath !=null && description!=null && address!=null && typeOfHouse!=null ) {
-				
+
+			if (price != null && bedBath != null && description != null && address != null && typeOfHouse != null) {
+
 				Property property = new Property();
 
 				StringTokenizer st = new StringTokenizer(price.text());
-				
+
 				while (st.hasMoreTokens()) {
 					property.price = Float.parseFloat(st.nextToken().replaceAll("[^0-9.]", ""));
 					// break after first element because first has price
 					break;
 				}
-								
+
 				property.address = address.text();
 				property.city = city.city;
 				property.province = city.province;
@@ -487,37 +683,35 @@ public class ScrapperCrawler {
 				property.zipcode = null; // zip code not available for any listings
 				property.description = description.text();
 				property.platform = platforms[1];
-				property.uniqueID = uniqueID.substring(0,uniqueID.length()-5);
-				
+				property.uniqueID = uniqueID.substring(0, uniqueID.length() - 5);
+
 				// solving house type
 				if (typeOfHouse.text().toLowerCase().contains("apartment")) {
 					property.houseType = TypeofHouse.Apartment;
-				}
-				else {
+				} else {
 					property.houseType = TypeofHouse.House;
 				}
-			
+
 				st = new StringTokenizer(bedBath.text());
-				
-				int i =1; // first element is bedrooms
+
+				int i = 1; // first element is bedrooms
 				String bedRooms = null;
 				int bathRooms = 0;
-				
-				// separting bathrooms and bedrooms 
-				while(st.hasMoreTokens()) {
-					if (i==1) {
+
+				// separting bathrooms and bedrooms
+				while (st.hasMoreTokens()) {
+					if (i == 1) {
 						bedRooms = st.nextToken();
 						i++;
-					}
-					else if(i == 2) {
-						bathRooms = Integer.parseInt(st.nextToken().replaceAll("[^0-9]","").strip());
+					} else if (i == 2) {
+						bathRooms = Integer.parseInt(st.nextToken().replaceAll("[^0-9]", "").strip());
 						break;
 					}
 				}
-				
+
 				int above = 0;
 				int below = 0;
-				
+
 				// solving bedrooms
 				if (bedRooms.contains("+")) {
 					above = Integer.parseInt(bedRooms.substring(0, 1));
@@ -526,18 +720,17 @@ public class ScrapperCrawler {
 				} else {
 					above = Integer.parseInt(bedRooms.substring(0, 1));
 				}
-				
+
 				property.bedrooms = above + below;
 				property.bathrooms = bathRooms;
-				
+
 				allProperties.add(property);
 				property = null;
-			}
-			else {
+			} else {
 				// delete files which are plots or doesn't have full info
 				deleteUselessFiles(uniqueID, htmlFile);
 			}
-			
+
 		} catch (Exception e) {
 			System.out.println("Error in loading data from file");
 			deleteUselessFiles(uniqueID, new File(filePath));
@@ -626,6 +819,7 @@ public class ScrapperCrawler {
 		// if above grade is null that means that this listing is not a
 		// apartment or a house or not all information is there in the files
 		// so delete such files
+		
 
 		if (htmlFile.delete()) {
 			System.out.println("File deleted successfully");
@@ -685,7 +879,7 @@ public class ScrapperCrawler {
 
 			try {
 				webCrawler(canadaCities);
-//				webCrawler(canadaCities.subList(1, 3));
+				// webCrawler(canadaCities.subList(6, 10));
 			} catch (Exception e) {
 				System.out.println("Connection Reset Error");
 				e.printStackTrace();
@@ -705,10 +899,9 @@ public class ScrapperCrawler {
 			// if dat file available just load the dat file
 			allProperties = readDatFile();
 			System.out.println("File Loaded Successfully");
-			
-			System.out.println("All Objects: "+ allProperties.size());
 
-			
+			System.out.println("All Objects: " + allProperties.size());
+
 		}
 
 	}
