@@ -51,6 +51,7 @@ public class ScrapperCrawler {
 
 	public static List<String> fileDeleteFail = new ArrayList<String>();
 	public static int faultyPages = 0;
+	public static List<String> uniqueIDs = new ArrayList<String>(); // to get unique ids
 
 	public static final File savedObject = new File(userDirectory + "/Saved Objects/allProperties.dat");
 
@@ -133,7 +134,8 @@ public class ScrapperCrawler {
 				} else if (platform.equals(platforms[1])) {
 					scrapeZoloData(driver, identifierSearch, identifierButton, searchQuery, windowsPath, linuxPath);
 				} else if (platform.equals(platforms[2])) {
-					scrapeRoyalLePageData(driver, identifierSearch, identifierButton, searchQuery, windowsPath, linuxPath);
+					scrapeRoyalLePageData(driver, identifierSearch, identifierButton, searchQuery, windowsPath,
+							linuxPath);
 				}
 			}
 		}
@@ -152,8 +154,8 @@ public class ScrapperCrawler {
 //			searchElement.sendKeys(Keys.chord(Keys.LEFT_CONTROL, Keys.BACK_SPACE, Keys.BACK_SPACE));
 			searchElement.click();
 			timeOut(1);
-			searchElement.sendKeys(searchQuery+", CAN");
-			
+			searchElement.sendKeys(searchQuery + ", CAN");
+
 			timeOut(1);
 			searchElement.click();
 			searchElement.sendKeys(Keys.chord(Keys.ENTER));
@@ -164,18 +166,15 @@ public class ScrapperCrawler {
 			e.printStackTrace();
 			return;
 		}
-		
-		
+
 		JavascriptExecutor js = (JavascriptExecutor) driver;
 		js.executeScript("scrollBy(0,450)"); // scroll by 450 pixels
 
-		
 		WebElement gallery = driver.findElement(By.id("gallery-view2"));
 		WebElement ul = gallery.findElements(By.tagName("ul")).get(0);
-		
+
 		List<WebElement> listings = ul.findElements(By.tagName("li"));
-		
-		
+
 		for (WebElement listing : listings) {
 			// get main window's window handle
 			String base = driver.getWindowHandle();
@@ -184,13 +183,14 @@ public class ScrapperCrawler {
 			try {
 				// remove ads
 				if (listing.getAttribute("class").equalsIgnoreCase("advertisment")) {
-					continue; 
+					continue;
 				}
-				
+
 				String clicklnk = Keys.chord(Keys.CONTROL, Keys.ENTER);
 				// open the link in new tab,by pressing ctrl + enter
-				listing.findElement(By.tagName("a")).sendKeys(clicklnk); // click a listing by ctrl + enter so that we can open into new tab
-				
+				listing.findElement(By.tagName("a")).sendKeys(clicklnk); // click a listing by ctrl + enter so that we
+																			// can open into new tab
+
 				// make a set of all window handles
 				set = driver.getWindowHandles();
 
@@ -216,17 +216,16 @@ public class ScrapperCrawler {
 				// get a unique id to save by file name
 
 				String uniqueID;
-				
-				
+
 				try {
 					uniqueID = driver.findElement(By.cssSelector("span.article.body-15")).getText()
 							.replaceAll("[^0-9A-Za-z]", "");
-					
-					String[] strArray = uniqueID.split(" ");  
-					
-					uniqueID = strArray[strArray.length-1].substring(3); 
-					
-					// make a file path					
+
+					String[] strArray = uniqueID.split(" ");
+
+					uniqueID = strArray[strArray.length - 1].substring(3);
+
+					// make a file path
 					String filePath;
 
 					if (osName.toLowerCase().contains("windows")) {
@@ -239,7 +238,7 @@ public class ScrapperCrawler {
 				} catch (Exception e) {
 					System.out.println("Listing Not Found and not saved");
 				}
-				
+
 				try {
 					driver.close(); // Close a tab
 					driver.switchTo().window(base); // switch to main base tab
@@ -249,8 +248,6 @@ public class ScrapperCrawler {
 					System.out.println("Unable to close new tab");
 				}
 
-				
-				
 			} catch (Exception e) {
 				System.out.println("Listing Not Clickable");
 			}
@@ -412,7 +409,7 @@ public class ScrapperCrawler {
 
 			String base = driver.getWindowHandle();
 			try {
-				timeOut(2); 
+				timeOut(2);
 				listing.click(); // click a listing
 
 				// make a set of all window handles
@@ -583,17 +580,17 @@ public class ScrapperCrawler {
 			Element price = doc.select("span.title.title--h1.price").first();
 
 			Element bedRooms = doc.select("div.bed-bath-box__item.beds").first();
-			
+
 			Element bathRooms = doc.select("div.bed-bath-box__item.baths").first();
- 
+
 			Elements description = doc.select("p.body-15.body-15--light ");
 
 			Elements address = doc.select("div.address-bar > h1.title--h2.u-no-margins");
 
 			Elements typeOfHouse = doc.select("ul.property-features-list");
 
-			
-			if (price != null && bedRooms != null && bathRooms != null && description != null && address != null && typeOfHouse != null) {
+			if (price != null && bedRooms != null && bathRooms != null && description != null && address != null
+					&& typeOfHouse != null) {
 
 				Property property = new Property();
 
@@ -602,7 +599,12 @@ public class ScrapperCrawler {
 				property.city = city.city;
 				property.province = city.province;
 				property.provinceId = city.provinceId;
-				property.zipcode = property.address.substring(property.address.length() - 7).replaceAll("\\s",""); // removing space from last 7 characters
+				property.zipcode = property.address.substring(property.address.length() - 7).replaceAll("\\s", ""); // removing
+																													// space
+																													// from
+																													// last
+																													// 7
+																													// characters
 				property.description = description.text();
 				property.platform = platforms[1];
 				property.uniqueID = uniqueID.substring(0, uniqueID.length() - 5);
@@ -630,7 +632,15 @@ public class ScrapperCrawler {
 																									// except numbers
 				property.bedrooms = above + below;
 
-				allProperties.add(property);
+				// to avoid repetition of same data.
+				if (!uniqueIDs.contains(uniqueID)) {
+					// if a unique id is not present then add it and add the property as well
+					uniqueIDs.add(uniqueID);
+					allProperties.add(property); // add to all properties
+				} else {
+					deleteUselessFiles(uniqueID, htmlFile);
+				}
+
 				property = null;
 			} else {
 				// delete files which are plots or doesn't have full info
@@ -644,7 +654,6 @@ public class ScrapperCrawler {
 
 	}
 
-	
 	// this function parses data saved in html files in zolo folder and makes
 	// objects of property
 	private static void saveZoloScrappedData(String filePath, City city, String uniqueID) {
@@ -724,7 +733,15 @@ public class ScrapperCrawler {
 				property.bedrooms = above + below;
 				property.bathrooms = bathRooms;
 
-				allProperties.add(property);
+				// to avoid repetition of same data.
+				if (!uniqueIDs.contains(uniqueID)) {
+					// if a unique id is not present then add it and add the property as well
+					uniqueIDs.add(uniqueID);
+					allProperties.add(property); // add to all properties
+				} else {
+					deleteUselessFiles(uniqueID, htmlFile);
+				}
+
 				property = null;
 			} else {
 				// delete files which are plots or doesn't have full info
@@ -802,7 +819,16 @@ public class ScrapperCrawler {
 				}
 
 //				System.out.println(filePath.substring(103));
-				allProperties.add(property); // add to all properties
+
+				// to avoid repetition of same data.
+				if (!uniqueIDs.contains(uniqueID)) {
+					// if a unique id is not present then add it and add the property as well
+					uniqueIDs.add(uniqueID);
+					allProperties.add(property); // add to all properties
+				} else {
+					deleteUselessFiles(uniqueID, htmlFile);
+				}
+
 				property = null; // freeing memory even though java has a garbage collector
 			} else {
 				deleteUselessFiles(uniqueID, htmlFile);
@@ -819,7 +845,6 @@ public class ScrapperCrawler {
 		// if above grade is null that means that this listing is not a
 		// apartment or a house or not all information is there in the files
 		// so delete such files
-		
 
 		if (htmlFile.delete()) {
 			System.out.println("File deleted successfully");
