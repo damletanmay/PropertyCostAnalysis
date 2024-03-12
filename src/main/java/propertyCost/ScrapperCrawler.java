@@ -134,8 +134,7 @@ public class ScrapperCrawler {
 				} else if (platform.equals(platforms[1])) {
 					scrapeZoloData(driver, identifierSearch, identifierButton, searchQuery, windowsPath, linuxPath);
 				} else if (platform.equals(platforms[2])) {
-					scrapeRoyalLePageData(driver, identifierSearch, identifierButton, searchQuery, windowsPath,
-							linuxPath);
+					scrapeRoyalLePageData(driver, identifierSearch, identifierButton, searchQuery, windowsPath,linuxPath);
 				}
 			}
 		}
@@ -558,6 +557,7 @@ public class ScrapperCrawler {
 							// save data into array list of properties
 							saveZoloScrappedData(propertyListingHTMLfilePath, city, uniqueFileIdentifier);
 						} else if (platform.equals(platforms[2])) {
+							// save data into array list of properties
 							saveRoyalLePageScrappedData(propertyListingHTMLfilePath, city, uniqueFileIdentifier);
 						}
 					}
@@ -895,7 +895,7 @@ public class ScrapperCrawler {
 
 		// making all the required folders for different purposes
 		makeFolders();
-
+	
 		// open saved object files if exist
 		File savedObjects = new File(userDirectory + "/Saved Objects/allProperties.dat");
 
