@@ -51,6 +51,7 @@ public class ScrapperCrawler {
 
 	public static List<String> fileDeleteFail = new ArrayList<String>();
 	public static int faultyPages = 0;
+	public static int faultyProperties = 0;
 	public static List<String> uniqueIDs = new ArrayList<String>(); // to get unique ids
 
 	public static final File savedObject = new File(userDirectory + "/Saved Objects/allProperties.dat");
@@ -134,7 +135,8 @@ public class ScrapperCrawler {
 				} else if (platform.equals(platforms[1])) {
 					scrapeZoloData(driver, identifierSearch, identifierButton, searchQuery, windowsPath, linuxPath);
 				} else if (platform.equals(platforms[2])) {
-					scrapeRoyalLePageData(driver, identifierSearch, identifierButton, searchQuery, windowsPath,linuxPath);
+					scrapeRoyalLePageData(driver, identifierSearch, identifierButton, searchQuery, windowsPath,
+							linuxPath);
 				}
 			}
 		}
@@ -606,7 +608,7 @@ public class ScrapperCrawler {
 																													// 7
 																													// characters
 				property.description = description.text();
-				property.platform = platforms[1];
+				property.platform = platforms[2];
 				property.uniqueID = uniqueID.substring(0, uniqueID.length() - 5);
 
 				// solving house type
@@ -839,12 +841,39 @@ public class ScrapperCrawler {
 
 	}
 
+	private static void deleteFaultyProperties() {
+		for (Property p : allProperties) {
+			if (p.bedrooms == 0 || p.bathrooms == 0 || p.description == null || p.address == null
+					|| p.houseType == null) {
+				String searchQuery = p.city + ", " + p.provinceId;
+
+				String windowsPath = String.format("%s\\Scraped Data\\%s\\%s\\", userDirectory, p.platform,
+						searchQuery);
+
+				String linuxPath = String.format("%s/Scraped Data/%s/%s/", userDirectory, p.platform, searchQuery);
+
+				String filePath = "";
+
+				if (osName.toLowerCase().contains("windows")) {
+					filePath = windowsPath + p.uniqueID + ".html";
+				} else {
+					filePath = linuxPath + p.uniqueID + ".html";
+				}
+
+				System.out.println(filePath);
+				deleteUselessFiles(p.uniqueID, new File(filePath));
+				faultyProperties++;
+			}
+		}
+	}
+
 	private static void deleteUselessFiles(String uniqueID, File htmlFile) {
-		faultyPages += 1;
 
 		// if above grade is null that means that this listing is not a
 		// apartment or a house or not all information is there in the files
 		// so delete such files
+
+		faultyPages += 1;
 
 		if (htmlFile.delete()) {
 			System.out.println("File deleted successfully");
@@ -895,7 +924,7 @@ public class ScrapperCrawler {
 
 		// making all the required folders for different purposes
 		makeFolders();
-	
+
 		// open saved object files if exist
 		File savedObjects = new File(userDirectory + "/Saved Objects/allProperties.dat");
 
@@ -927,7 +956,20 @@ public class ScrapperCrawler {
 
 			System.out.println("All Objects: " + allProperties.size());
 
+			
+			if (faultyProperties != 0) {
+				
+				deleteFaultyProperties();
+				// load scraped data into allProperties array list
+				loadScrapedDataIntoClass(canadaCities);
+				
+				// save allProperties array list to dat file
+				saveDatFile();
+			}
+			
+			System.out.println(faultyProperties);
 		}
 
 	}
+
 }
