@@ -924,7 +924,7 @@ public class ScrapperCrawler {
 
 		// making all the required folders for different purposes
 		makeFolders();
-
+		
 		// open saved object files if exist
 		File savedObjects = new File(userDirectory + "/Saved Objects/allProperties.dat");
 
