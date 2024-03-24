@@ -843,6 +843,7 @@ public class ScrapperCrawler {
 	}
 
 	private static void deleteFaultyProperties() {
+		ArrayList<Property> deleteObjects = new ArrayList<Property>();
 		for (Property p : allProperties) {
 			if (p.bedrooms == 0 || p.bathrooms == 0 || p.description == null || p.address == null
 					|| p.houseType == null) {
@@ -863,9 +864,11 @@ public class ScrapperCrawler {
 
 				System.out.println(filePath);
 				deleteUselessFiles(p.uniqueID, new File(filePath));
+				deleteObjects.add(p);
 				faultyProperties++;
 			}
 		}
+		allProperties.removeAll(deleteObjects);
 	}
 
 	private static void deleteUselessFiles(String uniqueID, File htmlFile) {
@@ -881,7 +884,6 @@ public class ScrapperCrawler {
 		} else {
 			System.out.println("Error in deleting file " + uniqueID);
 			fileDeleteFail.add(uniqueID);
-
 		}
 	}
 
@@ -957,7 +959,12 @@ public class ScrapperCrawler {
 			// save allProperties array list to dat file
 			saveDatFile(allProperties);
 		} else {
-			// if dat file available just load the dat file
+			// if dat file available just load the dat file 
+			
+			// uncomment and run below lines if error in loading file
+//			allProperties = readDatFile();
+//			deleteFaultyProperties();
+//			saveDatFile(allProperties);
 			allProperties = readDatFile();
 		}
 		return allProperties;
