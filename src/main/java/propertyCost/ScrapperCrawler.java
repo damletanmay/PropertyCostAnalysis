@@ -35,7 +35,7 @@ public class ScrapperCrawler {
 	public static final String userDirectory = System.getProperty("user.dir"); // getting user path
 	public static final String osName = System.getProperty("os.name"); // get OS name
 
-	public static ArrayList<City> canadaCities = new ArrayList<City>(); // cities are loaded into canadaCities object
+	public static List<City> canadaCities = new ArrayList<City>(); // cities are loaded into canadaCities object
 	public static ArrayList<Property> allProperties = new ArrayList<Property>();
 
 	public static final String[] platforms = { "Realtor", "Zolo", "RoyalLePage" }; // all the platforms
@@ -511,7 +511,7 @@ public class ScrapperCrawler {
 
 	// a function that returns a List of strings which has file names of all the
 	// files in a folder
-	public static List<String> listFiles(String dir) {
+	private static List<String> listFiles(String dir) {
 		// making a stream, filtering files to see if they are directory or not, mapping
 		// and then collecting to list
 		return Stream.of(new File(dir).listFiles()).filter(file -> !file.isDirectory()).map(File::getName)
@@ -520,7 +520,7 @@ public class ScrapperCrawler {
 
 	// this function loads previously scraped data into class property i.e. make
 	// objects
-	private static void loadScrapedDataIntoClass(ArrayList<City> cities) {
+	private static void loadScrapedDataIntoClass(List<City> cities) {
 
 		// for each platform, for each city, for each file inside a city save data of
 		// all the files in them
@@ -837,6 +837,7 @@ public class ScrapperCrawler {
 			}
 		} catch (Exception e) {
 			System.out.println("File Not Found");
+			deleteUselessFiles(uniqueID, new File(filePath));
 		}
 
 	}
@@ -903,7 +904,7 @@ public class ScrapperCrawler {
 	}
 
 	// save allProperties array list to savedObject path
-	private static void saveDatFile() {
+	private static void saveDatFile(ArrayList <Property> allProperties) {
 
 		try {
 			FileOutputStream outputStream = new FileOutputStream(savedObject);
@@ -918,10 +919,11 @@ public class ScrapperCrawler {
 		}
 	}
 
-	public static void main(String[] args) {
+	// driver function
+	public static ArrayList <Property> getProperties(List<City> canadaCitiesFromMain) {
 
-		canadaCities = City.loadCityData(); // load city data
-
+		canadaCities = canadaCitiesFromMain; // g
+		
 		// making all the required folders for different purposes
 		makeFolders();
 		
@@ -946,30 +948,19 @@ public class ScrapperCrawler {
 			System.out.println(allProperties.size());
 			System.out.println(faultyPages);
 			System.out.println(fileDeleteFail);
+			
+			// delete faulty properties 
+			deleteFaultyProperties();
+			
+			System.out.println("Deleted " + faultyProperties + " faulty properties");
 
 			// save allProperties array list to dat file
-			saveDatFile();
+			saveDatFile(allProperties);
 		} else {
 			// if dat file available just load the dat file
 			allProperties = readDatFile();
-			System.out.println("File Loaded Successfully");
-
-			System.out.println("All Objects: " + allProperties.size());
-
-			
-			if (faultyProperties != 0) {
-				
-				deleteFaultyProperties();
-				// load scraped data into allProperties array list
-				loadScrapedDataIntoClass(canadaCities);
-				
-				// save allProperties array list to dat file
-				saveDatFile();
-			}
-			
-			System.out.println(faultyProperties);
 		}
-
+		return allProperties;
 	}
 
 }

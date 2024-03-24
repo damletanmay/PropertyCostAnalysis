@@ -8,18 +8,20 @@ import java.util.Map;
 import java.util.Scanner;
 
 
-
 public class SpellChecker {
 	private SplayTree<String, Integer> dictionary;
-
-    public SpellChecker() {
+	
+    public SpellChecker(List<City> canadianCities) {
         dictionary = new SplayTree<>();
-        initializeDictionary();
+        initializeDictionary(canadianCities);
     }
 
+    public Integer searchFrequency(String searchCity) {
+    	return dictionary.getValue(searchCity.toLowerCase());
+    }
+    
     // Method to initialize dictionary with city names from canadianCities
-    private void initializeDictionary() {
-        ArrayList<City> canadianCities = City.loadCityData();
+    private void initializeDictionary(List<City> canadianCities) {
         for (City city : canadianCities) {
             addWord(city.city.toLowerCase());
         }
@@ -31,19 +33,21 @@ public class SpellChecker {
 	}
 
 	// Add Word
-	public void addWord(String word) {
+	public SplayTree<String, Integer> addWord(String word) {
 		word = word.toLowerCase();
 		Integer occurrences = dictionary.getValue(word);
 		if (occurrences == null) {
-			dictionary.insert(word, 1);
+			dictionary.insert(word, 0);
 		} else {
 			dictionary.insert(word, occurrences + 1);
 		}
+		return dictionary;
 	}
 
 
 	// Auto-correct with Similarity Metrics
 	public String[] suggestCorrections(String word) {
+		  word = word.toLowerCase();
 		// Implement similarity metric logic using Levenshtein distance
 		List<String> suggestions = new ArrayList<>();
 		for (Map.Entry<String, Integer> entry : dictionary.inOrderTraversal()) {
@@ -81,34 +85,4 @@ public class SpellChecker {
 	private int min(int... numbers) {
 		return Arrays.stream(numbers).min().orElse(Integer.MAX_VALUE);
 	}
-	
-//	public static void main(String[] args) {
-//	    Scanner scanner = new Scanner(System.in);
-//	    SpellChecker spellChecker = new SpellChecker();
-//
-//	    while (true) {
-//	        System.out.print("Enter word to spell check (or type 'exit' to quit): ");
-//	        String word = scanner.nextLine().toLowerCase();
-//
-//	        if (word.equals("exit")) {
-//	            System.out.println("Exiting spell checker. Goodbye!");
-//	            break;
-//	        }
-//
-//	        if (spellChecker.spellCheck(word)) {
-//	            System.out.println(word + " is spelled correctly.");
-//	        } else {
-//	            System.out.println(word + " is misspelled.");
-//	            System.out.println("Suggestions:  ");
-//	            String[] suggestions = spellChecker.suggestCorrections(word);
-//	            for (String suggestion : suggestions) {
-//	                System.out.println(suggestion);
-//	            }
-//	        }
-//	    }
-//	    scanner.close();
-//	}
-
 }
-
-

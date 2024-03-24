@@ -23,6 +23,7 @@ public class Trie {
     }
 
     public void insert(String term, String documentId) {
+    	term = term.toLowerCase();
         TrieNode node = root;
         for (char c : term.toCharArray()) {
             node.children.putIfAbsent(c, new TrieNode());
@@ -32,6 +33,7 @@ public class Trie {
     }
 
     public Set<String> search(String term) {
+    	term = term.toLowerCase();
         TrieNode node = root;
         for (char c : term.toCharArray()) {
             if (!node.children.containsKey(c)) {

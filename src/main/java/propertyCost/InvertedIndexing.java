@@ -2,7 +2,6 @@ package propertyCost;
 
 import java.util.*;
 import java.io.*;
-
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -10,56 +9,47 @@ import org.jsoup.select.Elements;
 
 public class InvertedIndexing {
 
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		System.out.println("Building Trie...");
+	public static Trie trieIndex = new Trie();
+	public static final String[] platforms = { "Realtor", "Zolo", "RoyalLePage" }; // all the platforms
+	public static final String userDirectory = System.getProperty("user.dir"); // getting user path
+	
+	// driver function
+	public static Trie getTrieOfInvertedIndexing(List<City> citiesFromMain) {
+        
+		// for each platform, for each city make trie of each file in each folder
+		for (String platform: platforms) {
+			for (City city : citiesFromMain) {
+				buildTrieforAFolder(new File(userDirectory+"/Scraped Data/" + platform + "/" + city.city + ", "+ city.provinceId ));
+			} 
+		}
+		return trieIndex;
+	}
+	
+	// add to public trie for each term in each file 
+	private static void buildTrieforAFolder(File folder) {
 		
-		Trie trieIndex = new Trie();
-		
-		// Assuming you have a folder named "Toronto_ON" containing HTML files for house
-		// listings
-		File folder = new File("D:\\UWINDSOR\\ACC\\Final Project\\PropertyCostAnalysis-main\\Scraped Data\\Realtor\\Toronto, ON");
-		File[] files = folder.listFiles();
+		File[] files = folder.listFiles(); // list files 
 
 		if (files != null) {
 			for (File file : files) {
 				if (file.isFile()) {
 					// Parse HTML file to extract text
 					String text = parseHTMLFile(file);
-
-					// Tokenize and preprocess the text
+					// Tokenizes and pre-process the text
 					String[] terms = text.toLowerCase().split("\\s+");
 
 					// Index the terms
 					String documentId = file.getName(); // Use file name as document ID
 					for (String term : terms) {
-						trieIndex.insert(term, documentId);
+						trieIndex.insert(term, documentId); // insert into trie
 					}
 				}
 			}
 		}
-		
-		System.out.println("Trie Built Succesfully");
-		
-		// Example: User input for search query
-		Scanner scanner = new Scanner(System.in);
-		System.out.print("Enter search query: ");
-		String query = scanner.nextLine();
-
-		// Search for house listings containing the search query
-		Set<String> result = trieIndex.search(query.toLowerCase());
-		if (!result.isEmpty()) {
-			System.out.println("House listings found for query '" + query + "': ");
-			for (String documentId : result) {
-				System.out.println(documentId);
-				// Additional processing to display information from the HTML file
-			}
-		} else {
-			System.out.println("No house listings found for query '" + query + "'");
-		}
-		scanner.close();
 	}
-	
+
+	// parse data from html file  
+	// TODO: Improve what words to add in Trie 
 	private static String parseHTMLFile(File file) {
         StringBuilder textBuilder = new StringBuilder();
 
