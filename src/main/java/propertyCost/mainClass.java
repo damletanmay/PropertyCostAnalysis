@@ -2,6 +2,7 @@ package propertyCost;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.io.File;
 import java.util.Scanner;
 import java.util.Set;
 import propertyCost.AutocompleteTrieMap.TrieAutoComplete;
@@ -9,10 +10,14 @@ import propertyCost.AutocompleteTrieMap.TrieAutoComplete;
 public class mainClass {
 
 	public static final List<City> canadaCities = City.loadCityData(); // cities are loaded into canadaCities object
-
+	public static Trie loadedTrie = null;
+	public static final String userDirectory = System.getProperty("user.dir"); // getting user path
+	
+	
 	// driver function for the whole program
 	public static void main(String[] args) {
 
+		@SuppressWarnings("resource")
 		Scanner scan = new Scanner(System.in);
 
 		System.out.println(
@@ -36,8 +41,17 @@ public class mainClass {
 		AutocompleteTrieMap.loadDictionary(autocomplete, canadaCities);// initialize autocomplete
 
 		// SHAURYAN'S Inverted Indexing Implemented with Trie  
-//		Trie invertedIndexing = InvertedIndexing.getTrieOfInvertedIndexing(canadaCities);
-		
+		// Check if the .dat file exists
+		File datFile = new File(userDirectory + "/Saved Objects/trie.dat");
+		if (datFile.exists()) {
+		    // Load trie from the existing .dat file
+		    loadedTrie = TrieSerialization.loadTrieFromDatFile(userDirectory + "/Saved Objects/trie.dat");
+		} else {
+		    // Build the trie since the .dat file doesn't exist
+		    Trie trie = InvertedIndexing.getTrieOfInvertedIndexing(canadaCities);
+		    TrieSerialization.saveTrieToDatFile(trie, userDirectory + "/Saved Objects/trie.dat");
+		    loadedTrie = TrieSerialization.loadTrieFromDatFile(userDirectory + "/Saved Objects/trie.dat");
+		}
 		// SHAURYAN'S Frequency Counter Implemented with HashMap
 		FrequencyCounter frequencyCounter = new FrequencyCounter(allProperties); // loads all property's cities data
 		
@@ -46,7 +60,7 @@ public class mainClass {
 		
 		String userInput = "";
 		
-		// infinite loop 
+		// infinite loop
 		do {
 
 			System.out.println("Enter a city or a Zipcode:");
@@ -122,14 +136,14 @@ public class mainClass {
 					System.out.println("The city " + userInput + " has been searched for " + frequency + " times.");
 					
 					// Inverted Indexing
-//					Set<String> userInputInFiles = invertedIndexing.search(userInput);				
-//					StringBuilder str = new StringBuilder();
-//					for (String document: userInputInFiles) {
-//						str.append(document);
-//						str.append(",");
-//					}
-//					System.out.println("The city " + userInput + " is found " + userInputInFiles.size() + " files:");
-//					System.out.println(str.toString());
+					Set<String> userInputInFiles = loadedTrie.search(userInput);				
+					StringBuilder str = new StringBuilder();
+					for (String document: userInputInFiles) {
+						str.append(document);
+						str.append(",");
+					}
+					System.out.println("The city " + userInput + " is found " + userInputInFiles.size() + " files:");
+					System.out.println(str.toString());
 					
 					// Frequency Counter 
 					System.out.println(frequencyCounter.getFrequency(userInput)+" Listings Found for " + userInput);

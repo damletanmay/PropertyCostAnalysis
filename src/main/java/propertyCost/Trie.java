@@ -16,14 +16,16 @@ class TrieNode {
 }
 
 public class Trie {
-    TrieNode root;
+    static TrieNode root;
 
     public Trie() {
-        root = new TrieNode();
+        if (root == null) {
+            root = new TrieNode();
+        }
     }
 
     public void insert(String term, String documentId) {
-    	term = term.toLowerCase();
+        term = term.toLowerCase();
         TrieNode node = root;
         for (char c : term.toCharArray()) {
             node.children.putIfAbsent(c, new TrieNode());
@@ -31,7 +33,7 @@ public class Trie {
         }
         node.documents.add(documentId);
     }
-
+    
     public Set<String> search(String term) {
     	term = term.toLowerCase();
         TrieNode node = root;
