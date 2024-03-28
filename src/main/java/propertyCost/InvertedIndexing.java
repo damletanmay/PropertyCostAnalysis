@@ -12,20 +12,53 @@ public class InvertedIndexing {
 	public static Trie trieIndex = new Trie();
 	public static final String[] platforms = { "Realtor", "Zolo", "RoyalLePage" }; // all the platforms
 	public static final String userDirectory = System.getProperty("user.dir"); // getting user path
-	public static final Set<String> cityNames = Set.of("brampton", "calgary", "edmonton", "montreal", "ottawa",
-			"quebec city", "toronto", "vancouver", "windsor", "winnipeg");
+	public static final String osName = System.getProperty("os.name"); // get OS name
+	public static Set<String> cityNames = new HashSet<String>();
+	
+	
+	// driver function to return to mainClass
+	public static Trie getLoadedTrie(List<City> citiesFromMain) {
+		
+		cityNames = City.giveAllCities(citiesFromMain);
+		
+		String windowsPath = String.format("%s\\Saved Objects\\trie.dat", userDirectory);
 
-	// driver function
-	public static Trie getTrieOfInvertedIndexing(List<City> citiesFromMain) {
+		String linuxPath = String.format("%s/Saved Objects/trie.dat", userDirectory);
+		
+		String filePath = userDirectory;
+		
+		if (osName.toLowerCase().contains("windows")) {
+			filePath = windowsPath;
+		} else {
+			filePath = linuxPath;
+		}
+		
+		Trie loadedTrie;
+		
+		File datFile = new File(filePath);
+		
+		if (datFile.exists()) {
+		    // Load trie from the existing .dat file
+		    loadedTrie = TrieSerialization.loadTrieFromDatFile(filePath);
+		} else {
+		    // Build the trie since the .dat file doesn't exist
+		    Trie trie = getTrieOfInvertedIndexing(citiesFromMain);
+		    TrieSerialization.saveTrieToDatFile(trie, filePath);
+		    loadedTrie = TrieSerialization.loadTrieFromDatFile(filePath);
+		}
+		
+		return loadedTrie;
+	}
+	
+	// get inverted indexing trie
+	private static Trie getTrieOfInvertedIndexing(List<City> citiesFromMain) {
 		
 		// for each platform, for each city make trie of each file in each folder
 		for (String platform: platforms) {
 			for (City city : citiesFromMain) {
-				
 				buildTrieforAFolder(new File(userDirectory+"/Scraped Data/" + platform + "/"  + city.city + ", " + city.provinceId ));
 			} 
 		}
-		
 		return trieIndex;
 	}
 
@@ -53,12 +86,11 @@ public class InvertedIndexing {
 			}
 		}
 	}
-
+	
+	
 	// parse data from html file
-	// TODO: Improve what words to add in Trie
 	private static String parseHTMLFile(File file) {
 		StringBuilder textBuilder = new StringBuilder();
-
 		try {
 			Document doc = Jsoup.parse(file, "UTF-8");
 
@@ -70,7 +102,6 @@ public class InvertedIndexing {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
 		return textBuilder.toString();
 	}
 }

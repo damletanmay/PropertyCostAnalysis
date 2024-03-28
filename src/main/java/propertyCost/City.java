@@ -2,6 +2,9 @@ package propertyCost;
 
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 import com.opencsv.CSVReader;
@@ -14,6 +17,16 @@ public class City {
 	String city, provinceId, province;
 	String zipCode[];
 
+	public static Set<String> giveAllCities(List<City> citiesFromMain){
+		
+		Set<String> allCities = new HashSet<String>();
+		
+		for (City city:citiesFromMain) {
+			allCities.add(city.city.toLowerCase());
+		}
+		return allCities;
+	}
+	
 	public static ArrayList<City> loadCityData() {
 
 		String userDirectory = System.getProperty("user.dir"); // getting user path

@@ -9,8 +9,7 @@ import propertyCost.AutocompleteTrieMap.TrieAutoComplete;
 
 public class mainClass {
 
-	public static final List<City> canadaCities = City.loadCityData(); // cities are loaded into canadaCities object
-	public static Trie loadedTrie = null;
+	public static final List<City> canadaCities = City.loadCityData(); // cities are loaded into canadaCities object 
 	public static final String userDirectory = System.getProperty("user.dir"); // getting user path
 	
 	
@@ -42,21 +41,13 @@ public class mainClass {
 
 		// SHAURYAN'S Inverted Indexing Implemented with Trie  
 		// Check if the .dat file exists
-		File datFile = new File(userDirectory + "/Saved Objects/trie.dat");
-		if (datFile.exists()) {
-		    // Load trie from the existing .dat file
-		    loadedTrie = TrieSerialization.loadTrieFromDatFile(userDirectory + "/Saved Objects/trie.dat");
-		} else {
-		    // Build the trie since the .dat file doesn't exist
-		    Trie trie = InvertedIndexing.getTrieOfInvertedIndexing(canadaCities);
-		    TrieSerialization.saveTrieToDatFile(trie, userDirectory + "/Saved Objects/trie.dat");
-		    loadedTrie = TrieSerialization.loadTrieFromDatFile(userDirectory + "/Saved Objects/trie.dat");
-		}
+		
+		Trie loadedTrie = InvertedIndexing.getLoadedTrie(canadaCities);
+		
 		// SHAURYAN'S Frequency Counter Implemented with HashMap
 		FrequencyCounter frequencyCounter = new FrequencyCounter(allProperties); // loads all property's cities data
 		
 		// ARYA'S Pattern Matching
-		
 		
 		String userInput = "";
 		
@@ -143,7 +134,7 @@ public class mainClass {
 						str.append(",");
 					}
 					System.out.println("The city " + userInput + " is found " + userInputInFiles.size() + " files:");
-					System.out.println(str.toString());
+//					System.out.println(str.toString());
 					
 					// Frequency Counter 
 					System.out.println(frequencyCounter.getFrequency(userInput)+" Listings Found for " + userInput);
@@ -174,5 +165,6 @@ public class mainClass {
 
 		} while (true);
 	}
+
 
 }
