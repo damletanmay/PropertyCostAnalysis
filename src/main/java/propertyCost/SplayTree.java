@@ -1,15 +1,16 @@
 package propertyCost;
 
+import java.io.Serializable;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 
-public class SplayTree<K extends Comparable<K>, V> {
+public class SplayTree <K extends Comparable<K>, V> implements Serializable{
 	private Node root;
 
-	private class Node {
+	private class Node implements Serializable {
 		K key;
 		V value;
 		Node left, right;

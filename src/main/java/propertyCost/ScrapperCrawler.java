@@ -924,15 +924,14 @@ public class ScrapperCrawler {
 	// driver function
 	public static ArrayList <Property> getProperties(List<City> canadaCitiesFromMain) {
 
-		canadaCities = canadaCitiesFromMain; // g
+		canadaCities = canadaCitiesFromMain; // 
 		
 		// making all the required folders for different purposes
 		makeFolders();
 		
 		// open saved object files if exist
-		File savedObjects = new File(userDirectory + "/Saved Objects/allProperties.dat");
 
-		if (!savedObjects.exists()) {
+		if (!savedObject.exists()) {
 			// if allProperties.dat is not found, start scraping
 
 			try {
@@ -965,6 +964,7 @@ public class ScrapperCrawler {
 //			allProperties = readDatFile();
 //			deleteFaultyProperties();
 //			saveDatFile(allProperties);
+			
 			allProperties = readDatFile();
 		}
 		return allProperties;

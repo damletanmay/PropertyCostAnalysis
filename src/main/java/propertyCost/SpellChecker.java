@@ -1,19 +1,36 @@
 package propertyCost;
 
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
 
 public class SpellChecker {
-	private SplayTree<String, Integer> dictionary;
+	public static SplayTree<String, Integer> dictionary;
+	
+	public static final String userDirectory = System.getProperty("user.dir"); // getting user path
+	public static final String osName = System.getProperty("os.name"); // get OS name
+	public static File savedObject = new File(userDirectory+"/Saved Objects/searchFrequency.dat");
 	
     public SpellChecker(List<City> canadianCities) {
-        dictionary = new SplayTree<>();
-        initializeDictionary(canadianCities);
+    	
+    	if (!savedObject.exists()) {
+            dictionary = new SplayTree<>();
+            initializeDictionary(canadianCities);
+            saveDatFile(dictionary);
+    	}
+    	else {
+    		readDatFile();
+    	}
     }
 
     public Integer searchFrequency(String searchCity) {
@@ -82,6 +99,43 @@ public class SpellChecker {
 		return a == b ? 0 : 1;
 	}
 
+
+	// read saved dat files which should have dictionary variable at the savedObject path
+	public static SplayTree<String, Integer> readDatFile() {
+		try {
+			FileInputStream inputStreamDat = new FileInputStream(savedObject);
+			ObjectInputStream objectReader = new ObjectInputStream(inputStreamDat);
+			Object object = objectReader.readObject();
+			dictionary = (SplayTree<String, Integer>) object;
+
+			objectReader.close();
+			inputStreamDat.close();
+			return dictionary;
+			
+		} catch (Exception e) {
+			System.out.println("Problem in reading dat files");
+			return null;
+		}
+	}
+	
+
+	// save dictionary array list to savedObject path
+	public static void saveDatFile(SplayTree<String, Integer> dictionary) {
+
+		try {
+			FileOutputStream outputStream = new FileOutputStream(savedObject);
+			ObjectOutputStream fileWriterDat = new ObjectOutputStream(outputStream);
+
+			// write all objects to file
+			fileWriterDat.writeObject(dictionary);
+			fileWriterDat.close();
+			outputStream.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("Object Saving Error");
+		}
+	}
+	
 	private int min(int... numbers) {
 		return Arrays.stream(numbers).min().orElse(Integer.MAX_VALUE);
 	}

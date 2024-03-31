@@ -2,16 +2,15 @@ package propertyCost;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.io.File;
 import java.util.Scanner;
 import java.util.Set;
+
 import propertyCost.AutocompleteTrieMap.TrieAutoComplete;
 
 public class mainClass {
 
 	public static final List<City> canadaCities = City.loadCityData(); // cities are loaded into canadaCities object 
 	public static final String userDirectory = System.getProperty("user.dir"); // getting user path
-	
 	
 	// driver function for the whole program
 	public static void main(String[] args) {
@@ -32,22 +31,24 @@ public class mainClass {
 		// TANMAY'S WEB CRAWLER AND HTML PARSER 
 		ArrayList<Property> allProperties = ScrapperCrawler.getProperties(canadaCities); 
 
-		// DHRUV'S Spell Checker And Search Frequency implemented by splay tree
+		// DHRUV'S Spell Checker And Search Frequency implemented with splay tree
 		SpellChecker spellCheckAndSearchFrequency = new SpellChecker(canadaCities); // initialize spell checker
 		
 		// VATSAL'S Auto Completed Implemented with Trie 
 		TrieAutoComplete autocomplete = new TrieAutoComplete();
 		AutocompleteTrieMap.loadDictionary(autocomplete, canadaCities);// initialize autocomplete
 
-		// SHAURYAN'S Inverted Indexing Implemented with Trie  
-		// Check if the .dat file exists
-		
+		// SHAURYAN'S Inverted Indexing Implemented with Trie
 		Trie loadedTrie = InvertedIndexing.getLoadedTrie(canadaCities);
 		
 		// SHAURYAN'S Frequency Counter Implemented with HashMap
 		FrequencyCounter frequencyCounter = new FrequencyCounter(allProperties); // loads all property's cities data
 		
-		// ARYA'S Pattern Matching
+		// ARYA'S Page Ranking implemented with splay tree
+		PageRanking pageRanking = new PageRanking(loadedTrie, canadaCities);
+		
+		// ARYA'S Pattern Matching Implemented with HashMap
+		PatternMatching patternMatching = new PatternMatching(pageRanking,canadaCities);
 		
 		String userInput = "";
 		
@@ -64,8 +65,9 @@ public class mainClass {
 				continue;
 			}
 			
-			boolean isCity = DataValidation.isCity(userInput); // VATSAL'S DATA VALIDATION FEATURE
-			boolean isPostalCode = DataValidation.isValidPostalCode(userInput.replaceAll(" ", "")); // VATSAL'S DATA VALIDATION FEATURE
+			// VATSAL'S DATA VALIDATION FEATURE
+			boolean isCity = DataValidation.isCity(userInput); 
+			boolean isPostalCode = DataValidation.isValidPostalCode(userInput.replaceAll(" ", ""));
 
 			// check if user input is a city or a postal code
 			if (isCity || isPostalCode) {
@@ -133,14 +135,17 @@ public class mainClass {
 						str.append(document);
 						str.append(",");
 					}
-					System.out.println("The city " + userInput + " is found " + userInputInFiles.size() + " files:");
+					System.out.println("The word " + userInput + " is found " + userInputInFiles.size() + " files:");
 //					System.out.println(str.toString());
+					
+					// Page Ranking
+					pageRanking.printNFiles(userInput, 10);
 					
 					// Frequency Counter 
 					System.out.println(frequencyCounter.getFrequency(userInput)+" Listings Found for " + userInput);
-					
+
 					// Pattern Matching
-					
+					patternMatching.printEmailPhoneNumber(userInput);
 					
 				} else {
 					// search by postal code
@@ -160,7 +165,9 @@ public class mainClass {
 				System.out.println(); // for space
 				continue;
 			}
-
+			
+			// save search frequency after each run
+			SpellChecker.saveDatFile(spellCheckAndSearchFrequency.dictionary); 
 			break; // exit the never ending loop
 
 		} while (true);

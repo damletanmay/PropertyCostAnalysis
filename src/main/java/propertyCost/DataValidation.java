@@ -16,7 +16,7 @@ public class DataValidation {
 
     // Validate if it is a city 
     public static boolean isCity(String city) {
-        String regex = "[A-Za-z]+";
+        String regex = "[A-Za-z ]+";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(city);
         return matcher.matches();

@@ -15,18 +15,12 @@ public class Test {
 	public static String userDirectory = System.getProperty("user.dir"); // getting user path
 
 	public static void main(String[] args) {
-		Property x = new Property();
-		x.city = "Toronoto";
-		Property y = new Property();
-		y.city = "Brampton";
-
-		x.printProperty();
-		y.printProperty();
-
-		allProperties.add(x);
-		allProperties.add(y);
-
-		// save all property
+		
+		ArrayList<City> x = City.loadCityData();
+		
+		for( String w: City.giveAllCities(x)) {
+			System.out.println(w);
+		}
 	
 	}
 
