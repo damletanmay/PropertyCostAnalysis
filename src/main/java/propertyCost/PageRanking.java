@@ -29,7 +29,7 @@ public class PageRanking {
 
 	public static ArrayList<String> tempList = new ArrayList<String>(); // will contain files
 
-	// splay tree to store page ranking will store <city string,(file, occurrences)>
+	// splay tree to store page ranking will store <city ,(file, occurrences)>
 	public static SplayTree<String, HashMap<String, Integer>> pageRankingST = new SplayTree<>();
 
 	public static final String userDirectory = System.getProperty("user.dir"); // getting user path

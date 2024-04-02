@@ -27,7 +27,7 @@ public class mainClass {
 			System.out.println(i + ". " + city.city);
 			i++;
 		}
-		System.out.println("Press exit to exit the program");
+		System.out.println("Press exit at any time to exit the program");
 
 		// TANMAY'S WEB CRAWLER AND HTML PARSER
 		ArrayList<Property> allProperties = ScrapperCrawler.getProperties(canadaCities);
@@ -55,10 +55,14 @@ public class mainClass {
 
 		// infinite loop
 		do {
-		
+
 			System.out.println("\nEnter a city or a Zipcode:");
 
-			userInput = scan.nextLine().strip();
+			userInput = scan.next().strip().trim();
+
+			if (userInput.toLowerCase().contains("exit")) {
+				System.exit(0); // exit system
+			}
 
 			// if user input is null then prompt again because if this is removed the enter
 			// character might go into the next question
@@ -93,16 +97,16 @@ public class mainClass {
 
 						if (!autoCompleteSuggestions.isEmpty()) {
 
-							System.out.println("Did you mean, " + autoCompleteSuggestions.get(0) + " ? (Y/n)"); // we
-																												// need
-																												// the
-																												// first
-																												// suggestion
-																												// only
+							// we need the first suggestion only
+							System.out.println("Did you mean, " + autoCompleteSuggestions.get(0) + " ? (Y/n)");
 
-							char cont = scan.next().charAt(0);
-							scan.nextLine(); // to take the enter space and whatever garbage user enter
+							String input = scan.next().strip().trim();
 
+							if (input.toLowerCase().contains("exit")) {
+								System.exit(0); // exit system
+							}
+
+							char cont = input.charAt(0);
 							if (cont == 'Y' || cont == 'y') {
 								// make user input as the correct word to display word below
 								userInput = autoCompleteSuggestions.get(0);
@@ -134,8 +138,8 @@ public class mainClass {
 							patternMatching);
 
 					// ask and print listings
-					printListings(allProperties,userInput,scan);
-					
+					printListings(allProperties, userInput, scan);
+
 				} else {
 
 					// search by postal code
@@ -161,7 +165,7 @@ public class mainClass {
 						// for displaying features
 						displayFeatures(userInput, spellCheckAndSearchFrequency, loadedTrie, pageRanking,
 								frequencyCounter, patternMatching);
-						printListings(allProperties,userInput,scan);
+						printListings(allProperties, userInput, scan);
 					} else {
 						System.out.println("The Postal Code is not found in the database");
 					}
@@ -173,16 +177,14 @@ public class mainClass {
 
 			// prompt user to continue
 			System.out.println("Do you want to continue ? (Y/n):");
-			char cont = scan.next().charAt(0);
-			scan.nextLine(); // to take the enter space
-
+			String input = scan.next().strip().trim();
+			char cont = input.charAt(0);
+			
 			if (cont == 'Y' || cont == 'y') {
 				System.out.println(); // for space
 				continue;
 			}
 
-			// save search frequency after each run
-			SpellChecker.saveDatFile(spellCheckAndSearchFrequency.dictionary);
 			break; // exit the never ending loop
 
 		} while (true);
@@ -193,13 +195,16 @@ public class mainClass {
 		// word is entered correctly or made correct then add that word to search
 		// frequency
 		// and display search frequency
-		
+
 		spellCheckAndSearchFrequency.addWord(userInput); // add word to search database
+		// save search frequency after each search
+		SpellChecker.saveDatFile(spellCheckAndSearchFrequency.dictionary);
+
 		Integer frequency = spellCheckAndSearchFrequency.searchFrequency(userInput);
 		System.out.println("\nThe city " + userInput + " has been searched for " + frequency + " times.");
-		
+
 		System.out.println();
-		
+
 		// Inverted Indexing
 		Set<String> userInputInFiles = loadedTrie.search(userInput);
 		StringBuilder str = new StringBuilder();
@@ -207,22 +212,21 @@ public class mainClass {
 			str.append(document);
 			str.append(",");
 		}
-		System.out.println("\nThe word " + userInput + " is found " + userInputInFiles.size() + " files (INVERTED INDEXING)");
+		System.out.println("The word " + userInput + " is found " + userInputInFiles.size() + " files (INVERTED INDEXING)");
 //		System.out.println(str.toString()); // print all files 
 		System.out.println();
-		
+
 		// Page Ranking
 		pageRanking.printNFiles(userInput, 10);
 
 		System.out.println();
 		// Frequency Counter
-		System.out.println(frequencyCounter.getFrequency(userInput) + " Listings Found for " + userInput + " (FREQUENCY COUNT)");
+		System.out.println(
+				frequencyCounter.getFrequency(userInput) + " Listings Found for " + userInput + " (FREQUENCY COUNT)");
 		System.out.println();
-		
+
 		// Pattern Matching
 		patternMatching.printEmailPhoneNumber(userInput);
-
-		System.out.println();
 	}
 
 	// ask for filters and print analysis of entered criteria
@@ -231,13 +235,18 @@ public class mainClass {
 		while (true) {
 
 			System.out.println("\nAre you looking for a House or an Apartment or both ?");
-			String houseOrApartment = scan.nextLine();
+			String houseOrApartment = scan.next().strip().trim();
+
+			if (houseOrApartment.toLowerCase().contains("exit")) {
+				System.exit(0); // exit system
+			}
+
 			TypeofHouse houseType;
 
-			if (houseOrApartment.toLowerCase().contains("both") || (houseOrApartment.toLowerCase().contains("house") && houseOrApartment.toLowerCase().contains("apartment"))) {
+			if (houseOrApartment.toLowerCase().contains("both") || (houseOrApartment.toLowerCase().contains("house")
+					&& houseOrApartment.toLowerCase().contains("apartment"))) {
 				houseType = null;
-			}
-			else {
+			} else {
 				if (houseOrApartment.toLowerCase().contains("house")) {
 					houseType = TypeofHouse.House;
 				} else if (houseOrApartment.toLowerCase().contains("apartment")) {
@@ -247,27 +256,47 @@ public class mainClass {
 					continue;
 				}
 			}
-			
+
 			try {
 				System.out.println("Enter The Number of Bedrooms you want:");
-				int bedrooms = scan.nextInt();
-				scan.nextLine();
+				String bed = scan.next().strip().trim().replaceAll("[^0-9]", "");
+				
+				if (bed.toLowerCase().contains("exit")) {
+					System.exit(0); // exit system
+				}
+				
+				int bedrooms = Integer.parseInt(bed);
 
 				System.out.println("Enter The Number of Bathrooms you want:");
-				int bathrooms = scan.nextInt();
-				scan.nextLine();
+				String bath = scan.next().strip().trim().replaceAll("[^0-9]", "");
+				
+				if (bath.toLowerCase().contains("exit")) {
+					System.exit(0); // exit system
+				}
+				int bathrooms = Integer.parseInt(bath);
 
 				System.out.println("Enter Minimum Price in CAD:");
-				float minPrice = scan.nextFloat();
-				scan.nextLine();
+				String minP = scan.next().strip().trim().replaceAll("[^0-9.]", "");
+				
+				if (minP.toLowerCase().contains("exit")) {
+					System.exit(0); // exit system
+				}
+				float minPrice = Float.parseFloat(minP);
+				
 
 				System.out.println("Enter Maximum Price in CAD:");
-				float maxPrice = scan.nextFloat();
-				scan.nextLine();
+				String maxP = scan.next().strip().trim().replaceAll("[^0-9.]", "");
+
+				if (maxP.toLowerCase().contains("exit")) {
+					System.exit(0); // exit system
+				}
+				float maxPrice = Float.parseFloat(maxP);
+
+				Property.printFilteredProperties(allProperties, userInput.toLowerCase(), bedrooms, bathrooms, houseType,
+						minPrice, maxPrice, canadaCities);
 				
-				Property.printFilteredProperties(allProperties, userInput.toLowerCase(), bedrooms, bathrooms, houseType, minPrice, maxPrice,canadaCities);
-				break;
-				
+				break; // break loop if everything okay
+
 			} catch (Exception e) {
 				System.out.println("Enter ONLY Numbers for Bedrooms, Bathrooms, Minimum and Maximum Price !");
 			}
