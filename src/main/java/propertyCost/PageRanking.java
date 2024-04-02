@@ -205,7 +205,7 @@ public class PageRanking {
 		HashMap<String, Integer> pageRankingOfOneCity = pageRankingST.getValue(cityName);
 		int i = 0;
 
-		
+		System.out.println("PAGE RANKING");
 		for(Map.Entry<String, Integer> item : pageRankingOfOneCity.entrySet()) {
 			
 

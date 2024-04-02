@@ -164,7 +164,7 @@ public class ScrapperCrawler {
 			timeOut(10); // wait 10 seconds
 		} catch (Exception e) {
 			System.out.println("Main Page not found");
-			e.printStackTrace();
+//			e.printStackTrace();
 			return;
 		}
 
@@ -275,7 +275,7 @@ public class ScrapperCrawler {
 
 		} catch (Exception e) {
 			System.out.println("Main Page not found");
-			e.printStackTrace();
+//			e.printStackTrace();
 			return;
 		}
 
@@ -390,7 +390,7 @@ public class ScrapperCrawler {
 
 		} catch (Exception e) {
 			System.out.println("Main Page not found");
-			e.printStackTrace();
+//			e.printStackTrace();
 			return;
 		}
 
@@ -495,7 +495,7 @@ public class ScrapperCrawler {
 
 		} catch (IOException e) {
 			System.out.println("An error occurred.");
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 	}
 
@@ -933,22 +933,22 @@ public class ScrapperCrawler {
 
 		if (!savedObject.exists()) {
 			// if allProperties.dat is not found, start scraping
-
+			
 			try {
 				webCrawler(canadaCities);
 				// webCrawler(canadaCities.subList(6, 10));
 			} catch (Exception e) {
 				System.out.println("Connection Reset Error");
-				e.printStackTrace();
+//				e.printStackTrace();
 			}
 
 			// load scraped data into allProperties array list
 			loadScrapedDataIntoClass(canadaCities);
 
 			// print stuff
-			System.out.println(allProperties.size());
-			System.out.println(faultyPages);
-			System.out.println(fileDeleteFail);
+//			System.out.println(allProperties.size());
+//			System.out.println(faultyPages);
+//			System.out.println(fileDeleteFail);
 			
 			// delete faulty properties 
 			deleteFaultyProperties();
@@ -964,7 +964,6 @@ public class ScrapperCrawler {
 //			allProperties = readDatFile();
 //			deleteFaultyProperties();
 //			saveDatFile(allProperties);
-			
 			allProperties = readDatFile();
 		}
 		return allProperties;

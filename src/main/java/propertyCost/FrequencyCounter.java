@@ -16,9 +16,14 @@ public class FrequencyCounter {
 	// driver function loadDataIntoFrequency
 	private void loadDataIntoFrequency(List<Property> allProperties) {
 		// add all cities into frequency counter
-		for(Property p : allProperties) {
-			String city = p.city.toLowerCase(); // extract city
-			cityFrequency.put(city, cityFrequency.getOrDefault(city, 0) + 1); // add city
+		if (allProperties != null) {
+			for(Property p : allProperties) {
+				String city = p.city.toLowerCase(); // extract city
+				cityFrequency.put(city, cityFrequency.getOrDefault(city, 0) + 1); // add city
+			}
+		}
+		else{
+			System.out.println("Error in Loading All Properties into Frequency Counter");
 		}
 	}
 
