@@ -24,7 +24,7 @@ public class Property implements Serializable {
 		return (int) this.price;
 	}
 
-	public final static String line ="------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
+	public final static String line ="------------------------------------------------------------------------------------------------------------------------------------";
 
 	public static void printFilteredProperties(ArrayList<Property> allProperties, String city, int bedrooms,
 			int bathroom, TypeofHouse houseType, float minPrice, float maxPrice, List<City> canadacities) {
@@ -48,15 +48,15 @@ public class Property implements Serializable {
 		List<Property> subListBackUp = subListFilteredProperties; // remove first and last properties
 		System.out.println(subListBackUp.size() + " Properties Found.\n");
 
-		// remove first and last element
-		subListFilteredProperties.remove(0);
-		subListFilteredProperties.remove(subListFilteredProperties.size() - 1);
-
 		float sum = 0;
 
 		if (subListFilteredProperties.size() > 0) {
 
 			try {
+				// remove first and last element
+				subListFilteredProperties.remove(subListFilteredProperties.size() - 1);
+				subListFilteredProperties.remove(0);
+				
 				// print all properties except for minimum and maximum properties
 				for (Property property : subListFilteredProperties) {
 					System.out.println(line);
@@ -64,32 +64,41 @@ public class Property implements Serializable {
 					sum += property.price;
 				}
 			} catch (Exception e) {
-
 			}
 		}
 		
 		System.out.println(line);
 
-		// print minimum price property
-		System.out.println("Property With Minimum Price:");
-		subListBackUp.getFirst().printProperty();
-		sum += subListBackUp.getFirst().price;
+		if (!subListBackUp.isEmpty()) {
 
-		System.out.println(line);
+			try {
+				// print minimum price property
+				System.out.println("Property With Minimum Price:");
+				subListBackUp.get(0).printProperty();
+				sum += subListBackUp.get(0).price;
 
-		// print maximum price property
-		System.out.println("Property With Maximum Price:");
-		subListBackUp.getLast().printProperty();
-		sum += subListBackUp.getLast().price;
+				System.out.println(line);
 
-		System.out.println(subListBackUp.size() + " Properties Found.\n");
+				// print maximum price property
+				System.out.println("Property With Maximum Price:");
+				subListBackUp.get(subListBackUp.size()-1).printProperty();
+				sum += subListBackUp.get(subListBackUp.size()-1).price;
+
+				System.out.println(subListBackUp.size() + " Properties Found.\n");
+				
+				if (!subListBackUp.isEmpty()) {
+					sum /= subListBackUp.size();
+
+					System.out.println(line);
+
+					System.out.printf("Average Price for all properties found with given criteria CA$ %.2f \n", sum);
+				}
+			} catch (Exception e) {
+				
+			}
+		}
 		
-		sum /= subListBackUp.size();
-
-		System.out.println(line);
-
-		System.out.printf("Average Price for all properties found with given criteria CA$ %.2f \n", sum);
-
+	
 		printAverageOfEachCity(allProperties, city, bedrooms, bathroom, houseType, minPrice, maxPrice, canadacities);
 	}
 

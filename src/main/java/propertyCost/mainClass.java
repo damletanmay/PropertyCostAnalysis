@@ -58,7 +58,7 @@ public class mainClass {
 
 			System.out.println("\nEnter a city or a Zipcode:");
 
-			userInput = scan.next().strip().trim();
+			userInput = scan.nextLine().trim().strip();
 
 			if (userInput.toLowerCase().contains("exit")) {
 				System.exit(0); // exit system
@@ -74,7 +74,7 @@ public class mainClass {
 			// VATSAL'S DATA VALIDATION FEATURE
 			boolean isCity = DataValidation.isCity(userInput);
 			boolean isPostalCode = DataValidation.isValidPostalCode(userInput.replaceAll(" ", ""));
-
+			
 			// check if user input is a city or a postal code
 			if (isCity || isPostalCode) {
 
@@ -100,7 +100,7 @@ public class mainClass {
 							// we need the first suggestion only
 							System.out.println("Did you mean, " + autoCompleteSuggestions.get(0) + " ? (Y/n)");
 
-							String input = scan.next().strip().trim();
+							String input = scan.nextLine().trim().strip();
 
 							if (input.toLowerCase().contains("exit")) {
 								System.exit(0); // exit system
@@ -177,7 +177,7 @@ public class mainClass {
 
 			// prompt user to continue
 			System.out.println("Do you want to continue ? (Y/n):");
-			String input = scan.next().strip().trim();
+			String input = scan.nextLine().trim().strip();
 			char cont = input.charAt(0);
 			
 			if (cont == 'Y' || cont == 'y') {
@@ -235,7 +235,7 @@ public class mainClass {
 		while (true) {
 
 			System.out.println("\nAre you looking for a House or an Apartment or both ?");
-			String houseOrApartment = scan.next().strip().trim();
+			String houseOrApartment = scan.nextLine().trim().strip();
 
 			if (houseOrApartment.toLowerCase().contains("exit")) {
 				System.exit(0); // exit system
@@ -259,7 +259,7 @@ public class mainClass {
 
 			try {
 				System.out.println("Enter The Number of Bedrooms you want:");
-				String bed = scan.next().strip().trim().replaceAll("[^0-9]", "");
+				String bed = scan.nextLine().trim().strip().replaceAll("[^0-9]", "");
 				
 				if (bed.toLowerCase().contains("exit")) {
 					System.exit(0); // exit system
@@ -268,7 +268,7 @@ public class mainClass {
 				int bedrooms = Integer.parseInt(bed);
 
 				System.out.println("Enter The Number of Bathrooms you want:");
-				String bath = scan.next().strip().trim().replaceAll("[^0-9]", "");
+				String bath = scan.nextLine().trim().strip().replaceAll("[^0-9]", "");
 				
 				if (bath.toLowerCase().contains("exit")) {
 					System.exit(0); // exit system
@@ -276,7 +276,7 @@ public class mainClass {
 				int bathrooms = Integer.parseInt(bath);
 
 				System.out.println("Enter Minimum Price in CAD:");
-				String minP = scan.next().strip().trim().replaceAll("[^0-9.]", "");
+				String minP = scan.nextLine().trim().strip().replaceAll("[^0-9.]", "");
 				
 				if (minP.toLowerCase().contains("exit")) {
 					System.exit(0); // exit system
@@ -285,7 +285,7 @@ public class mainClass {
 				
 
 				System.out.println("Enter Maximum Price in CAD:");
-				String maxP = scan.next().strip().trim().replaceAll("[^0-9.]", "");
+				String maxP = scan.nextLine().trim().strip().replaceAll("[^0-9.]", "");
 
 				if (maxP.toLowerCase().contains("exit")) {
 					System.exit(0); // exit system
@@ -299,6 +299,7 @@ public class mainClass {
 
 			} catch (Exception e) {
 				System.out.println("Enter ONLY Numbers for Bedrooms, Bathrooms, Minimum and Maximum Price !");
+				e.printStackTrace();
 			}
 
 		}
