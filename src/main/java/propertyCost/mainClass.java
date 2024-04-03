@@ -312,9 +312,17 @@ public class mainClass {
 					System.exit(0); // exit system
 				}
 				float maxPrice = Float.parseFloat(maxP);
+				
+				if (minPrice < maxPrice) {
 
-				Property.printFilteredProperties(allProperties, userInput.toLowerCase(), bedrooms, bathrooms, houseType,
-						minPrice, maxPrice, canadaCities);
+					Property.printFilteredProperties(allProperties, userInput.toLowerCase(), bedrooms, bathrooms, houseType,
+							minPrice, maxPrice, canadaCities);	
+				}
+				else {
+					System.out.println("Minimum Price Should be lesser than maximum price");
+					System.out.println("Please Try Again!");
+					continue;
+				}
 				
 				break; // break loop if everything okay
 
