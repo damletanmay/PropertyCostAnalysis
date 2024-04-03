@@ -29,23 +29,22 @@ public class Property implements Serializable {
 	public static void printFilteredProperties(ArrayList<Property> allProperties, String city, int bedrooms,
 			int bathroom, TypeofHouse houseType, float minPrice, float maxPrice, List<City> canadacities) {
 
-		List<Property> subListFilteredProperties = new ArrayList<Property>();
+		ArrayList<Property> subListFilteredProperties = null;
 
 		if (houseType == null) {
-			subListFilteredProperties = allProperties.stream().filter(p -> p.city.toLowerCase().equals(city))
+			subListFilteredProperties = (ArrayList<Property>) allProperties.stream().filter(p -> p.city.toLowerCase().equals(city))
 					.filter(p -> p.bathrooms == bathroom && p.bedrooms == bedrooms)
 					.filter(p -> p.price > minPrice && p.price <= maxPrice)
 					.sorted(Comparator.comparingInt(Property::getPrice)).collect(Collectors.toList());
 		} else {
-			subListFilteredProperties = allProperties.stream().filter(p -> p.houseType.equals(houseType))
+			subListFilteredProperties = (ArrayList<Property>) allProperties.stream().filter(p -> p.houseType.equals(houseType))
 					.filter(p -> p.city.toLowerCase().equals(city))
 					.filter(p -> p.bathrooms == bathroom && p.bedrooms == bedrooms)
 					.filter(p -> p.price >= minPrice && p.price <= maxPrice)
 					.sorted(Comparator.comparingInt(Property::getPrice)).collect(Collectors.toList());
 		}
-
-
-		List<Property> subListBackUp = subListFilteredProperties; // remove first and last properties
+		
+		ArrayList<Property> subListBackUp = (ArrayList<Property>) subListFilteredProperties.clone(); // remove first and last properties
 		System.out.println(subListBackUp.size() + " Properties Found.\n");
 
 		float sum = 0;
@@ -69,24 +68,23 @@ public class Property implements Serializable {
 		
 		System.out.println(line);
 
-		if (!subListBackUp.isEmpty()) {
-
+		if (subListBackUp.size() > 0) {
 			try {
 				// print minimum price property
 				System.out.println("Property With Minimum Price:");
-				subListBackUp.get(0).printProperty();
-				sum += subListBackUp.get(0).price;
+				subListBackUp.getFirst().printProperty();
+				sum += subListBackUp.getFirst().price;
 
 				System.out.println(line);
 
 				// print maximum price property
 				System.out.println("Property With Maximum Price:");
-				subListBackUp.get(subListBackUp.size()-1).printProperty();
-				sum += subListBackUp.get(subListBackUp.size()-1).price;
+				subListBackUp.getLast().printProperty();
+				sum += subListBackUp.getLast().price;
 
 				System.out.println(subListBackUp.size() + " Properties Found.\n");
 				
-				if (!subListBackUp.isEmpty()) {
+				if (subListBackUp.size() > 0) {
 					sum /= subListBackUp.size();
 
 					System.out.println(line);

@@ -20,7 +20,16 @@ public class mainClass {
 		Scanner scan = new Scanner(System.in);
 
 		System.out.println(
-				"-- -- -- ---- -- -- -- WELCOME TO PROPERTICO - A PROPERTY ANALYSIS APP -- -- -- ---- -- -- --");
+				  "            .------------------------------------------------------------------------------. \n"
+				+ "            |██████╗ ██████╗  ██████╗ ██████╗ ███████╗██████╗ ████████╗██╗ ██████╗ ██████╗ | \n"
+				+ "            |██╔══██╗██╔══██╗██╔═══██╗██╔══██╗██╔════╝██╔══██╗╚══██╔══╝██║██╔════╝██╔═══██╗| \n"
+				+ "            |██████╔╝██████╔╝██║   ██║██████╔╝█████╗  ██████╔╝   ██║   ██║██║     ██║   ██║| \n"
+				+ "            |██╔═══╝ ██╔══██╗██║   ██║██╔═══╝ ██╔══╝  ██╔══██╗   ██║   ██║██║     ██║   ██║| \n"
+				+ "            |██║     ██║  ██║╚██████╔╝██║     ███████╗██║  ██║   ██║   ██║╚██████╗╚██████╔╝| \n"
+				+ "            |╚═╝     ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚═╝ ╚═════╝ ╚═════╝ | \n"
+				+ "            '------------------------------------------------------------------------------' \n"
+				+ "-- -- -- ---- -- -- -- WELCOME TO PROPERTICO - A PROPERTY ANALYSIS APP -- -- -- ---- -- -- --\n");
+
 		System.out.println("Available Cities Data:");
 		int i = 1;
 		for (City city : canadaCities) {
@@ -58,9 +67,10 @@ public class mainClass {
 
 			System.out.println("\nEnter a city or a Zipcode:");
 
-			userInput = scan.nextLine().trim().strip();
+			userInput = scan.next().trim().strip().replaceAll("\t","");
 
 			if (userInput.toLowerCase().contains("exit")) {
+				System.out.println("Program Terminated ! ");
 				System.exit(0); // exit system
 			}
 
@@ -100,9 +110,10 @@ public class mainClass {
 							// we need the first suggestion only
 							System.out.println("Did you mean, " + autoCompleteSuggestions.get(0) + " ? (Y/n)");
 
-							String input = scan.nextLine().trim().strip();
+							String input = scan.next().trim().strip();
 
 							if (input.toLowerCase().contains("exit")) {
+								System.out.println("Program Terminated ! ");
 								System.exit(0); // exit system
 							}
 
@@ -176,15 +187,16 @@ public class mainClass {
 			}
 
 			// prompt user to continue
+			
 			System.out.println("Do you want to continue ? (Y/n):");
-			String input = scan.nextLine().trim().strip();
+			String input = scan.next().trim().strip();
 			char cont = input.charAt(0);
 			
 			if (cont == 'Y' || cont == 'y') {
 				System.out.println(); // for space
 				continue;
 			}
-
+			System.out.println("Program Terminated ! ");
 			break; // exit the never ending loop
 
 		} while (true);
@@ -235,9 +247,10 @@ public class mainClass {
 		while (true) {
 
 			System.out.println("\nAre you looking for a House or an Apartment or both ?");
-			String houseOrApartment = scan.nextLine().trim().strip();
+			String houseOrApartment = scan.next().trim().strip().replaceAll("\t","");
 
 			if (houseOrApartment.toLowerCase().contains("exit")) {
+				System.out.println("Program Terminated ! ");
 				System.exit(0); // exit system
 			}
 
@@ -259,24 +272,26 @@ public class mainClass {
 
 			try {
 				System.out.println("Enter The Number of Bedrooms you want:");
-				String bed = scan.nextLine().trim().strip().replaceAll("[^0-9]", "");
+				String bed = scan.next().trim().strip().replaceAll("\t","");
 				
 				if (bed.toLowerCase().contains("exit")) {
+					System.out.println("Program Terminated ! ");
 					System.exit(0); // exit system
 				}
 				
 				int bedrooms = Integer.parseInt(bed);
 
 				System.out.println("Enter The Number of Bathrooms you want:");
-				String bath = scan.nextLine().trim().strip().replaceAll("[^0-9]", "");
+				String bath = scan.next().trim().strip().replaceAll("\t","");
 				
 				if (bath.toLowerCase().contains("exit")) {
+					System.out.println("Program Terminated ! ");
 					System.exit(0); // exit system
 				}
 				int bathrooms = Integer.parseInt(bath);
 
 				System.out.println("Enter Minimum Price in CAD:");
-				String minP = scan.nextLine().trim().strip().replaceAll("[^0-9.]", "");
+				String minP = scan.next().trim().strip().replaceAll("\t","");
 				
 				if (minP.toLowerCase().contains("exit")) {
 					System.exit(0); // exit system
@@ -285,9 +300,10 @@ public class mainClass {
 				
 
 				System.out.println("Enter Maximum Price in CAD:");
-				String maxP = scan.nextLine().trim().strip().replaceAll("[^0-9.]", "");
+				String maxP = scan.next().trim().strip().replaceAll("\t","");
 
 				if (maxP.toLowerCase().contains("exit")) {
+					System.out.println("Program Terminated ! ");
 					System.exit(0); // exit system
 				}
 				float maxPrice = Float.parseFloat(maxP);
@@ -299,7 +315,6 @@ public class mainClass {
 
 			} catch (Exception e) {
 				System.out.println("Enter ONLY Numbers for Bedrooms, Bathrooms, Minimum and Maximum Price !");
-				e.printStackTrace();
 			}
 
 		}
