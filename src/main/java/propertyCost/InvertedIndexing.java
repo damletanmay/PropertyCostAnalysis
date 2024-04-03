@@ -9,7 +9,7 @@ import org.jsoup.select.Elements;
 
 public class InvertedIndexing {
 
-	public static Trie trieIndex = new Trie();
+	public static TrieClass trieIndex = new TrieClass();
 	public static final String[] platforms = { "Realtor", "Zolo", "RoyalLePage" }; // all the platforms
 	public static final String userDirectory = System.getProperty("user.dir"); // getting user path
 	public static final String osName = System.getProperty("os.name"); // get OS name
@@ -17,7 +17,7 @@ public class InvertedIndexing {
 	
 	
 	// driver function to return to mainClass
-	public static Trie getLoadedTrie(List<City> citiesFromMain) {
+	public static TrieClass getLoadedTrie(List<City> citiesFromMain) {
 		
 		cityNames = City.giveAllCities(citiesFromMain);
 		
@@ -33,7 +33,7 @@ public class InvertedIndexing {
 			filePath = linuxPath;
 		}
 		
-		Trie loadedTrie;
+		TrieClass loadedTrie;
 		
 		File datFile = new File(filePath);
 		
@@ -42,7 +42,7 @@ public class InvertedIndexing {
 		    loadedTrie = TrieSerialization.loadTrieFromDatFile(filePath);
 		} else {
 		    // Build the trie since the .dat file doesn't exist
-		    Trie trie = getTrieOfInvertedIndexing(citiesFromMain);
+		    TrieClass trie = getTrieOfInvertedIndexing(citiesFromMain);
 		    TrieSerialization.saveTrieToDatFile(trie, filePath);
 		    loadedTrie = TrieSerialization.loadTrieFromDatFile(filePath);
 		}
@@ -51,7 +51,7 @@ public class InvertedIndexing {
 	}
 	
 	// get inverted indexing trie
-	private static Trie getTrieOfInvertedIndexing(List<City> citiesFromMain) {
+	private static TrieClass getTrieOfInvertedIndexing(List<City> citiesFromMain) {
 		
 		// for each platform, for each city make trie of each file in each folder
 		for (String platform: platforms) {
@@ -79,7 +79,7 @@ public class InvertedIndexing {
 					String documentId = file.getName(); // Use file name as document ID
 					for (String term : terms) {
 						if (cityNames.contains(term)) {
-							trieIndex.insert(term.toLowerCase(), documentId); // insert into trie	
+							trieIndex.insertNode(term.toLowerCase(), documentId); // insert into trie	
 						}
 					}
 				}

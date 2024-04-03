@@ -49,7 +49,7 @@ public class mainClass {
 		AutocompleteTrieMap.loadDictionary(autocomplete, canadaCities);// initialize autocomplete
 
 		// SHAURYAN'S Inverted Indexing Implemented with Trie
-		Trie loadedTrie = InvertedIndexing.getLoadedTrie(canadaCities);
+		TrieClass loadedTrie = InvertedIndexing.getLoadedTrie(canadaCities);
 
 		// SHAURYAN'S Frequency Counter Implemented with HashMap
 		FrequencyCounter frequencyCounter = new FrequencyCounter(allProperties); // loads all property's cities data
@@ -205,7 +205,7 @@ public class mainClass {
 		} while (true);
 	}
 
-	private static void displayFeatures(String userInput, SpellChecker spellCheckAndSearchFrequency, Trie loadedTrie,
+	private static void displayFeatures(String userInput, SpellChecker spellCheckAndSearchFrequency, TrieClass loadedTrie,
 			PageRanking pageRanking, FrequencyCounter frequencyCounter, PatternMatching patternMatching) {
 		// word is entered correctly or made correct then add that word to search
 		// frequency
@@ -221,7 +221,7 @@ public class mainClass {
 		System.out.println();
 
 		// Inverted Indexing
-		Set<String> userInputInFiles = loadedTrie.search(userInput);
+		Set<String> userInputInFiles = loadedTrie.searchNode(userInput);
 		StringBuilder str = new StringBuilder();
 		for (String document : userInputInFiles) {
 			str.append(document);

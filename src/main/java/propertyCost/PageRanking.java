@@ -40,12 +40,12 @@ public class PageRanking {
 
 	public static Set<String> cityNames = new HashSet<String>();
 
-	public PageRanking(Trie loadedTrie, List<City> canadaCities) {
+	public PageRanking(TrieClass loadedTrie, List<City> canadaCities) {
 		populateSplayTree(loadedTrie, canadaCities);
 	}
 
 	// initialize pageRankingST variable by either reading or processing from files
-	private static void populateSplayTree(Trie loadedTrie, List<City> canadaCities) {
+	private static void populateSplayTree(TrieClass loadedTrie, List<City> canadaCities) {
 		File savedObject = new File(userDirectory + "/Saved Objects/pageRankingSplayTree.dat");
 
 		if (!savedObject.exists()) {
@@ -84,7 +84,7 @@ public class PageRanking {
 
 	// populate filePaths with city name and list of files in which that word is
 	// found
-	private static void getAllCitiesFilePath(Trie loadedTrie, List<City> canadaCities) {
+	private static void getAllCitiesFilePath(TrieClass loadedTrie, List<City> canadaCities) {
 
 		// configure file path of scraped data directory according to system os
 		String filePath = null;
@@ -105,11 +105,11 @@ public class PageRanking {
 			tempList = new ArrayList<String>();
 
 			// for each file, find path of it in our file system
-			for (String fileName : loadedTrie.search(city.city)) {
+			for (String fileName : loadedTrie.searchNode(city.city)) {
 				getFilePaths(filePath, fileName);
 			}
 
-			if (tempList.size() == loadedTrie.search(city.city).size()) {
+			if (tempList.size() == loadedTrie.searchNode(city.city).size()) {
 				filePaths.put(city.city.toLowerCase(), tempList);
 			}
 		}
