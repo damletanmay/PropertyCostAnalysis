@@ -40,7 +40,7 @@ public class mainClass {
 
 		// TANMAY'S WEB CRAWLER AND HTML PARSER
 		ArrayList<Property> allProperties = ScrapperCrawler.getProperties(canadaCities);
-
+		
 		// DHRUV'S Spell Checker And Search Frequency implemented with splay tree
 		SpellChecker spellCheckAndSearchFrequency = new SpellChecker(canadaCities); // initialize spell checker
 
@@ -67,7 +67,7 @@ public class mainClass {
 
 			System.out.println("\nEnter a city or a Zipcode:");
 
-			userInput = scan.next().trim().strip().replaceAll("\t","");
+			userInput = scan.nextLine().trim().strip().replaceAll("\t","").replaceAll(" ","");
 
 			if (userInput.toLowerCase().contains("exit")) {
 				System.out.println("Program Terminated ! ");
@@ -110,8 +110,10 @@ public class mainClass {
 							// we need the first suggestion only
 							System.out.println("Did you mean, " + autoCompleteSuggestions.get(0) + " ? (Y/n)");
 
-							String input = scan.next().trim().strip();
-
+							String input = scan.next().trim().strip().replaceAll("\t","").replaceAll(" ","");
+							
+							scan.nextLine();
+							
 							if (input.toLowerCase().contains("exit")) {
 								System.out.println("Program Terminated ! ");
 								System.exit(0); // exit system
@@ -189,7 +191,8 @@ public class mainClass {
 			// prompt user to continue
 			
 			System.out.println("Do you want to continue ? (Y/n):");
-			String input = scan.next().trim().strip();
+			String input = scan.next().trim().strip().replaceAll("\t","").replaceAll(" ","");
+			scan.nextLine();
 			char cont = input.charAt(0);
 			
 			if (cont == 'Y' || cont == 'y') {
@@ -247,7 +250,7 @@ public class mainClass {
 		while (true) {
 
 			System.out.println("\nAre you looking for a House or an Apartment or both ?");
-			String houseOrApartment = scan.next().trim().strip().replaceAll("\t","");
+			String houseOrApartment = scan.nextLine().trim().strip().replaceAll("\t","").replaceAll(" ","");
 
 			if (houseOrApartment.toLowerCase().contains("exit")) {
 				System.out.println("Program Terminated ! ");
@@ -273,7 +276,7 @@ public class mainClass {
 			try {
 				System.out.println("Enter The Number of Bedrooms you want:");
 				String bed = scan.next().trim().strip().replaceAll("\t","");
-				
+				scan.nextLine();
 				if (bed.toLowerCase().contains("exit")) {
 					System.out.println("Program Terminated ! ");
 					System.exit(0); // exit system
@@ -283,7 +286,7 @@ public class mainClass {
 
 				System.out.println("Enter The Number of Bathrooms you want:");
 				String bath = scan.next().trim().strip().replaceAll("\t","");
-				
+				scan.nextLine();
 				if (bath.toLowerCase().contains("exit")) {
 					System.out.println("Program Terminated ! ");
 					System.exit(0); // exit system
@@ -292,6 +295,7 @@ public class mainClass {
 
 				System.out.println("Enter Minimum Price in CAD:");
 				String minP = scan.next().trim().strip().replaceAll("\t","");
+				scan.nextLine();
 				
 				if (minP.toLowerCase().contains("exit")) {
 					System.exit(0); // exit system
@@ -301,6 +305,7 @@ public class mainClass {
 
 				System.out.println("Enter Maximum Price in CAD:");
 				String maxP = scan.next().trim().strip().replaceAll("\t","");
+				scan.nextLine();
 
 				if (maxP.toLowerCase().contains("exit")) {
 					System.out.println("Program Terminated ! ");

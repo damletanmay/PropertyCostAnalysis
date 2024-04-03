@@ -69,7 +69,7 @@ public class SpellChecker {
 		List<String> suggestions = new ArrayList<>();
 		for (Map.Entry<String, Integer> entry : dictionary.inOrderTraversal()) {
 			String dictWord = entry.getKey();
-			if (calculateLevenshteinDistance(word, dictWord) <= 4) { // Adjust threshold as needed
+			if (calculateLevenshteinDistance(word, dictWord) <= 3) { // Adjust threshold as needed
 				suggestions.add(dictWord);
 			}
 		}
