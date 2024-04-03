@@ -1,30 +1,27 @@
 package propertyCost;
 
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
+import java.io.*;
+import java.util.*;
 
 
 public class SpellChecker {
 	public static SplayTree<String, Integer> dictionary;
 	
+	
+	// Saving 
 	public static final String userDirectory = System.getProperty("user.dir"); // getting user path
 	public static final String osName = System.getProperty("os.name"); // get OS name
 	public static File savedObject = new File(userDirectory+"/Saved Objects/searchFrequency.dat");
 	
+	
+	// Spell checker fetches 
     public SpellChecker(List<City> canadianCities) {
     	
     	if (!savedObject.exists()) {
             dictionary = new SplayTree<>();
+            // importing city names from cities.csv and to splaytree(string,int)
+            // cities are to string and are intialized by 0
             initializeDictionary(canadianCities);
             saveDatFile(dictionary);
     	}
@@ -76,25 +73,30 @@ public class SpellChecker {
 		return suggestions.toArray(new String[0]);
 	}
 
-	// Calculate Levenshtein Distance between two strings
-	private int calculateLevenshteinDistance(String s1, String s2) {
-		int[][] dp = new int[s1.length() + 1][s2.length() + 1];
+	// Distance between word 1 & word 2 
+	// we can count how many operations will BE required to reach from one string to another
+	private int calculateLevenshteinDistance(String wrd1, String wrd2) {
+		int[][] dp = new int[wrd1.length() + 1][wrd2.length() + 1];
 
-		for (int i = 0; i <= s1.length(); i++) {
-			for (int j = 0; j <= s2.length(); j++) {
-				if (i == 0) {
-					dp[i][j] = j;
-				} else if (j == 0) {
-					dp[i][j] = i;
+		for (int x = 0; x <= wrd1.length(); x++) {
+			for (int y = 0; y <= wrd2.length(); y++) {
+				if (x == 0) {
+					dp[x][y] = y;
+				} else if (y == 0) {
+					dp[x][y] = x;
 				} else {
-					dp[i][j] = min(dp[i - 1][j - 1] + costOfSubstitution(s1.charAt(i - 1), s2.charAt(j - 1)),
-							dp[i - 1][j] + 1, dp[i][j - 1] + 1);
+					dp[x][y] = min(dp[x - 1][y - 1] + costOfSubstitution(wrd1.charAt(x - 1), wrd2.charAt(y - 1)),
+							dp[x - 1][y] + 1, dp[x][y - 1] + 1);
 				}
 			}
 		}
-		return dp[s1.length()][s2.length()];
+		
+		// Returning the difference
+		return dp[wrd1.length()][wrd2.length()];
 	}
 
+	
+	// costOfSubstitution used by levisatn distance
 	private int costOfSubstitution(char a, char b) {
 		return a == b ? 0 : 1;
 	}
@@ -107,13 +109,18 @@ public class SpellChecker {
 			ObjectInputStream objectReader = new ObjectInputStream(inputStreamDat);
 			Object object = objectReader.readObject();
 			dictionary = (SplayTree<String, Integer>) object;
-
+			// reader close
 			objectReader.close();
 			inputStreamDat.close();
 			return dictionary;
 			
-		} catch (Exception e) {
-			System.out.println("Problem in reading dat files");
+		} 
+		// Exception Handling: - file
+		catch (Exception expn) {
+			expn.printStackTrace();
+			// Printing errors
+			System.out.println("Error: Problem occured while reading file");
+			System.out.println("Check file directory & paths given to file");
 			return null;
 		}
 	}
@@ -125,14 +132,18 @@ public class SpellChecker {
 		try {
 			FileOutputStream outputStream = new FileOutputStream(savedObject);
 			ObjectOutputStream fileWriterDat = new ObjectOutputStream(outputStream);
-
+			// reader close
 			// write all objects to file
 			fileWriterDat.writeObject(dictionary);
 			fileWriterDat.close();
 			outputStream.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("Object Saving Error");
+		} 
+		// Exception Handling: - file
+		catch (Exception expn) {
+			expn.printStackTrace();
+			// Printing errors
+			System.out.println("Error :- object is not getting saved in saved objects");
+			System.out.println("Check file directory");
 		}
 	}
 	
