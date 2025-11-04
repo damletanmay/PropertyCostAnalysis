@@ -1,4 +1,4 @@
-# Propertico - A web scrapper to find Properties
+# Propertico - A web scrapper to find Houses and make a database
 
 ![web_crawler](web_crawler.gif)
 
@@ -15,3 +15,18 @@
 * [Crawling](https://drive.google.com/file/d/1lV3i_bc-kR8-vyS2dqRnAZj9pyAg6wOD/view?usp=sharing)
 
 * [Implementation](https://drive.google.com/file/d/1I5MTI46RI41jcpyCqF4N7buPVvxQhlR3/view?usp=sharing)
+
+# Key Modules
+
+* Web Crawler
+* HTML Parser
+* Data Validation using Regular Expression 
+* Spell Checking
+* Word Completion
+* Inverted Indexing
+* Search Frequency
+* Frequency Counter
+* Page Ranking
+* Pattern matching using Regular Expression
+
+
