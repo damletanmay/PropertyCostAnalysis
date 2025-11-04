@@ -4,11 +4,11 @@
 
 # Work Flow
 
-1 - Take input from CSV File
-2 - Clean and find Cities to scrape data for
-3 - Scrape Data on Realtor.com, Zolo.ca and Royallepage.ca
-4 - Make a .DAT file (JAVA object format)
-5 - Perform Anaylsis on that data 
+1.  Take input from CSV File
+2.  Clean and find Cities to scrape data for
+3.  Scrape Data on Realtor.com, Zolo.ca and Royallepage.ca
+4.  Make a .DAT file (JAVA object format)
+5.  Perform Anaylsis on that data 
 
 # Videos
 
